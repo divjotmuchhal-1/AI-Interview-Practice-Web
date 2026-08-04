@@ -2,8 +2,8 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 
-const FREE_SESSION_LIMIT = 2;
-const PRO_SESSION_LIMIT  = 60;
+// Limits live in the consume_session database function (supabase/consume_session.sql)
+// so the check and the increment happen atomically.
 
 export async function POST() {
   const supabase = await createClient();
@@ -11,34 +11,29 @@ export async function POST() {
   if (!user) return new Response('Unauthorized', { status: 401 });
 
   const admin = createAdminClient();
-  const { data: existing } = await admin
-    .from('user_subscriptions')
-    .select('sessions_used_this_month, sessions_reset_at, status')
-    .eq('user_id', user.id)
-    .single();
 
-  const now        = new Date();
-  const resetAt    = existing ? new Date(existing.sessions_reset_at) : new Date(0);
-  const needsReset =
-    resetAt.getFullYear() !== now.getFullYear() ||
-    resetAt.getMonth()    !== now.getMonth();
+  // Atomic check-and-increment under a row lock (supabase/consume_session.sql).
+  // Read-then-write here would let two concurrent requests both pass the limit
+  // check and each grant a session.
+  const { data, error } = await admin.rpc('consume_session', { p_user_id: user.id });
+  const result = Array.isArray(data) ? data[0] : data;
 
-  const currentUsed = needsReset ? 0 : (existing?.sessions_used_this_month ?? 0);
-  const limit       = existing?.status === 'pro' ? PRO_SESSION_LIMIT : FREE_SESSION_LIMIT;
+  if (error || !result) {
+    console.error('consume_session failed:', error?.message ?? 'no result');
+    return NextResponse.json({ ok: false, error: 'consume_failed' }, { status: 500 });
+  }
 
-  if (currentUsed >= limit) {
+  if (!result.ok) {
     return NextResponse.json(
-      { ok: false, error: 'session_limit_reached', sessions_used_this_month: currentUsed, session_limit: limit },
+      {
+        ok: false,
+        error: 'session_limit_reached',
+        sessions_used_this_month: result.sessions_used,
+        session_limit: result.session_limit,
+      },
       { status: 403 },
     );
   }
-
-  await admin.from('user_subscriptions').upsert({
-    user_id:                  user.id,
-    sessions_used_this_month: currentUsed + 1,
-    sessions_reset_at:        needsReset ? now.toISOString() : (existing?.sessions_reset_at ?? now.toISOString()),
-    updated_at:               now.toISOString(),
-  });
 
   return NextResponse.json({ ok: true });
 }
