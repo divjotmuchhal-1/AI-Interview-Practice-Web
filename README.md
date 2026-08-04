@@ -81,22 +81,40 @@ npm install        # also copies Monaco into public/monaco (postinstall)
 npm run dev
 ```
 
-Create `.env.local` with:
+Copy `.env.local.example` to `.env.local` and fill in real values:
 
-| Variable | Purpose |
-|---|---|
-| `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anon key (client auth) |
-| `SUPABASE_SERVICE_ROLE_KEY` | Server-only admin access (subscriptions, reports) |
-| `ANTHROPIC_API_KEY` | AI coach + grading |
-| `STRIPE_SECRET_KEY` | Stripe server SDK |
-| `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Stripe client |
-| `STRIPE_PRICE_ID` | The Pro monthly price |
-| `STRIPE_WEBHOOK_SECRET` | Webhook signature verification |
-| `NEXT_PUBLIC_APP_URL` | Base URL for Stripe redirects |
+| Variable | Secret? | Purpose |
+|---|---|---|
+| `NEXT_PUBLIC_SUPABASE_URL` | public | Supabase project URL |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | public | Supabase anon key (client auth; safe by design, protected by RLS) |
+| `SUPABASE_SERVICE_ROLE_KEY` | **secret** | Bypasses RLS. Server-only admin access |
+| `ANTHROPIC_API_KEY` | **secret** | AI coach + grading |
+| `STRIPE_SECRET_KEY` | **secret** | Stripe server SDK |
+| `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | public | Stripe client |
+| `STRIPE_PRICE_ID` | **secret** | The Pro monthly price |
+| `STRIPE_WEBHOOK_SECRET` | **secret** | Webhook signature verification |
+| `NEXT_PUBLIC_APP_URL` | public | Base URL for Stripe redirects |
 
-One-time Supabase setup: run `supabase/issue_reports.sql` in the SQL editor
-(the app degrades gracefully to a mailto fallback until then).
+### Secret handling rules
+
+- Secrets live only in `.env.local` locally (gitignored) and in the host's
+  environment settings in production (Vercel project → Settings → Environment
+  Variables). Never in code, never committed.
+- **Never prefix a secret with `NEXT_PUBLIC_`.** That prefix instructs Next.js to
+  inline the value into the browser bundle. Only the four `NEXT_PUBLIC_` values
+  above are safe to expose.
+- All AI, Stripe, and admin-database calls happen in `app/api/*` route handlers so
+  keys stay server-side. Client code only ever calls same-origin `/api/*` routes.
+- To verify no secret reaches the browser after a change:
+  `npx next build && grep -rE "sk-ant|sk_live|whsec_|SERVICE_ROLE" .next/static`
+  (silence means clean).
+- If a secret is ever committed, rotate it at the provider immediately: deleting
+  the file does not remove it from git history, and history can be recovered from
+  any clone.
+
+One-time Supabase setup: run the SQL in `supabase/` in the SQL editor:
+`issue_reports.sql` (issue-report table) and `consume_session.sql` (atomic session
+counting; the consume endpoint fails without it).
 
 ## Deploying
 
