@@ -1,0 +1,125 @@
+/*
+ * overrides.css — Cross-cutting last-word rules: responsive breakpoints, reduced motion, mobile gating. Imported last on purpose.
+ * Part of the split global stylesheet; imported by app/globals.css in a fixed order.
+ */
+
+/* ── Responsive ───────────────────────────────────────────────────────── */
+
+@media (max-width: 768px) {
+  .picker-header  { padding: 28px 24px 24px; }
+  .picker-main    { padding: 28px 24px 48px; }
+  .picker-header-inner { flex-direction: column; gap: 16px; }
+  .picker-header-right { flex-wrap: wrap; }
+  .scenario-grid  { grid-template-columns: 1fr; }
+
+  .track-header { flex-direction: column; align-items: flex-start; gap: 14px; padding: 20px 20px; }
+  .track-aside  { align-self: flex-end; }
+  .track-grid   { grid-template-columns: 1fr; }
+  .track-body-inner { padding: 0 16px; }
+  .track-body--open .track-body-inner { padding: 0 16px 16px; }
+
+  .rv-body        { flex-direction: column; }
+  .rv-left        { width: 100%; }
+  .rv-feedback-row { grid-template-columns: 1fr; }
+
+  .rv-timeline-section { padding: 0 16px 24px; }
+}
+
+@media (max-width: 480px) {
+  .picker-header   { padding: 20px 16px; }
+  .picker-main     { padding: 20px 16px 40px; }
+  .tier-banner     { flex-wrap: wrap; gap: 8px; }
+  .picker-logo     { font-size: 18px; }
+  .picker-subtitle { font-size: 12px; }
+  .picker-logo-mark { width: 28px; height: 28px; }
+  .stats-row       { gap: 6px; }
+  .stats-item      { padding: 10px 11px; }
+  .stats-value     { font-size: 20px; }
+  .track-icon      { width: 36px; height: 36px; }
+}
+
+/* ── Reduced motion ───────────────────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ── Mobile expectation management ─────────────────────────────────────── */
+
+/* Landing hero note: hidden on desktop */
+.lp-mobile-note {
+  display: none;
+  margin-top: 14px;
+  padding: 10px 14px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text-muted);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+/* Session config modal: mobile note hidden on desktop */
+.scm-mobile-note {
+  display: none;
+  margin: 0 20px 4px;
+  padding: 10px 12px;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--orange);
+  background: var(--orange-dim);
+  border: 1px solid rgba(212, 136, 58, 0.35);
+  border-radius: var(--radius);
+}
+
+/* Workspace gate: hidden on desktop */
+.workspace-mobile-gate {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  background: var(--bg-base);
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 12px;
+  padding: 32px 24px;
+}
+.workspace-mobile-gate-icon { font-size: 40px; }
+.workspace-mobile-gate-title {
+  font-family: var(--font-heading);
+  font-size: 20px;
+  color: var(--text-heading);
+  margin: 0;
+  text-wrap: balance;
+}
+.workspace-mobile-gate-text {
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--text-muted);
+  max-width: 340px;
+  margin: 0;
+}
+.workspace-mobile-gate-btn {
+  margin-top: 8px;
+  padding: 10px 18px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+  background: var(--accent);
+  border: none;
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+
+@media (max-width: 820px) {
+  .lp-mobile-note { display: block; }
+  .scm-mobile-note { display: block; }
+  .scm-start { display: none; }
+  .workspace-mobile-gate { display: flex; }
+}

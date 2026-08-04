@@ -1,0 +1,16 @@
+# Dependencies and build output
+node_modules/
+.next/
+tsconfig.tsbuildinfo
+
+# Environment: real secrets never enter the repo (.env.local.example is committed)
+.env*
+!.env.local.example
+
+# Generated at install time (postinstall copies from node_modules)
+public/monaco/
+
+# Local tooling and OS noise
+.claude/
+.DS_Store
+*.log

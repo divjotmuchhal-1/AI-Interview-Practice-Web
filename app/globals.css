@@ -1,0 +1,18 @@
+/*
+ * Global stylesheet entry point.
+ * The actual styles live in app/styles/, split by feature area and imported in
+ * cascade order. base.css holds the design tokens; overrides.css must stay last.
+ */
+
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap');
+
+@import './styles/base.css';
+@import './styles/landing.css';
+@import './styles/auth.css';
+@import './styles/picker.css';
+@import './styles/workspace.css';
+@import './styles/review.css';
+@import './styles/profile.css';
+@import './styles/subscription.css';
+@import './styles/legal.css';
+@import './styles/overrides.css';

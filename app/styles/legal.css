@@ -1,0 +1,95 @@
+/*
+ * legal.css — Terms and privacy pages (legal-*).
+ * Part of the split global stylesheet; imported by app/globals.css in a fixed order.
+ */
+
+/* ── Legal pages (terms, privacy) ──────────────────────────────────────── */
+
+.legal-root {
+  min-height: 100vh;
+  background: var(--bg-base);
+  display: flex;
+  flex-direction: column;
+}
+.legal-header {
+  padding: 20px 48px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-surface);
+}
+.legal-back {
+  font-family: var(--font-heading);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-heading);
+  text-decoration: none;
+  transition: color 0.15s;
+}
+.legal-back:hover { color: var(--accent); }
+.legal-body {
+  flex: 1;
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 48px 24px 64px;
+  font-size: 14.5px;
+  line-height: 1.75;
+  color: var(--text);
+}
+.legal-body h1 {
+  font-family: var(--font-heading);
+  font-size: 28px;
+  color: var(--text-heading);
+  margin-bottom: 6px;
+  text-wrap: balance;
+}
+.legal-updated {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-bottom: 28px;
+}
+.legal-body h2 {
+  font-family: var(--font-heading);
+  font-size: 17px;
+  color: var(--text-heading);
+  margin: 30px 0 8px;
+}
+.legal-body p { margin-bottom: 12px; }
+.legal-body ul {
+  padding-left: 22px;
+  margin-bottom: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.legal-body a {
+  color: var(--accent);
+  text-decoration: none;
+}
+.legal-body a:hover { text-decoration: underline; }
+.legal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 18px 24px;
+  border-top: 1px solid var(--border-soft);
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.legal-footer a {
+  color: var(--text-muted);
+  text-decoration: none;
+  transition: color 0.15s;
+}
+.legal-footer a:hover { color: var(--text); }
+
+.sub-legal-note {
+  font-size: 11px;
+  color: var(--text-muted);
+  opacity: 0.75;
+  text-align: center;
+  margin-top: 10px;
+  line-height: 1.6;
+}
+.sub-legal-note a { color: var(--text-muted); text-decoration: underline; }
+.sub-legal-note a:hover { color: var(--text); }

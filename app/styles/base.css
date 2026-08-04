@@ -1,0 +1,109 @@
+/*
+ * base.css — Design tokens, reset, and shared keyframes. Imported first: every other sheet depends on these variables.
+ * Part of the split global stylesheet; imported by app/globals.css in a fixed order.
+ */
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* ── Design tokens ────────────────────────────────────────────────────── */
+
+:root {
+  --bg-base:      #100f0d;
+  --bg-surface:   #191714;
+  --bg-elevated:  #211f1b;
+  --bg-hover:     #2a2620;
+
+  --border:       rgba(255, 255, 255, 0.08);
+  --border-soft:  rgba(255, 255, 255, 0.05);
+
+  --text:         #e2d8cc;
+  --text-muted:   #8a7f72;
+  --text-heading: #f5ede3;
+
+  --accent:       #e8774a;
+  --accent-hover: #ef8d64;
+  --accent-dim:   rgba(232, 119, 74, 0.14);
+  --accent-glow:  0 4px 20px rgba(232, 119, 74, 0.28);
+  --accent-text:  #ffffff;
+
+  --green:        #5cb87e;
+  --green-dim:    rgba(92, 184, 126, 0.12);
+  --orange:       #d4883a;
+  --orange-dim:   rgba(212, 136, 58, 0.12);
+  --red:          #d9534f;
+  --red-dim:      rgba(217, 83, 79, 0.12);
+
+  --amber:        #c9a555;
+  --tag-bg:       rgba(201, 165, 85, 0.12);
+  --tag-text:     #c9a555;
+
+  --font-heading: 'Space Grotesk', system-ui, sans-serif;
+  --font-body:    'Inter', system-ui, sans-serif;
+  --font-mono:    'JetBrains Mono', 'Menlo', 'Consolas', monospace;
+
+  --shadow-sm:    0 1px 3px rgba(0, 0, 0, 0.4);
+  --shadow:       0 4px 16px rgba(0, 0, 0, 0.5), 0 1px 4px rgba(0, 0, 0, 0.3);
+  --shadow-lg:    0 8px 40px rgba(0, 0, 0, 0.65);
+
+  --radius-sm:    4px;
+  --radius:       8px;
+  --radius-lg:    12px;
+
+  font-family: var(--font-body);
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text);
+  background: var(--bg-base);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+}
+
+/* ── Keyframes ─────────────────────────────────────────────────────────── */
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: none; }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes popIn {
+  from { opacity: 0; transform: scale(0.85); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(48px); }
+  to   { opacity: 1; transform: none; }
+}
+
+@keyframes floatOrb {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50%      { transform: translate(-32px, 24px) scale(1.08); }
+}
+
+@keyframes floatY {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-6px); }
+}
+
+@keyframes pulseSoft {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.45; }
+}
+
+@keyframes sheen {
+  0%       { left: -60%; }
+  55%, 100% { left: 130%; }
+}

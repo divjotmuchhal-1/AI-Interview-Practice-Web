@@ -1,0 +1,226 @@
+/*
+ * subscription.css — Subscription / pricing screen (sub-*).
+ * Part of the split global stylesheet; imported by app/globals.css in a fixed order.
+ */
+
+/* ── Subscription screen ─────────────────────────────────────────────── */
+
+.sub-root {
+  min-height: 100vh;
+  background: var(--bg-base);
+  display: flex;
+  flex-direction: column;
+}
+
+.sub-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px 32px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-surface);
+}
+
+.sub-back {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-family: var(--font-body);
+  font-size: 13px;
+  cursor: pointer;
+  padding: 4px 0;
+  transition: color 0.15s;
+}
+.sub-back:hover { color: var(--text); }
+
+.sub-heading {
+  font-family: var(--font-heading);
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-heading);
+  margin: 0;
+}
+
+.sub-body {
+  flex: 1;
+  max-width: 820px;
+  margin: 0 auto;
+  padding: 48px 32px;
+  width: 100%;
+}
+
+.sub-current-label {
+  font-size: 14px;
+  color: var(--text-muted);
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sub-tier-chip {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 99px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.sub-tier-chip--free { background: rgba(212,136,58,0.15); color: var(--orange); }
+.sub-tier-chip--pro  { background: rgba(92,184,126,0.15); color: var(--green); }
+
+.sub-usage-bar-wrap {
+  margin-bottom: 40px;
+  padding: 16px 20px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+}
+
+.sub-usage-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-bottom: 10px;
+}
+
+.sub-usage-reset { color: var(--text-muted); }
+
+.sub-usage-track {
+  height: 4px;
+  background: var(--bg-hover);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.sub-usage-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+.sub-cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.sub-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.sub-card--active { border-color: rgba(255,255,255,0.15); }
+.sub-card--pro.sub-card--active { border-color: rgba(92,184,126,0.35); }
+.sub-card--pro { background: var(--bg-elevated); }
+
+.sub-card-header {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.sub-card-name {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.sub-card-price {
+  font-family: var(--font-heading);
+  font-size: 36px;
+  font-weight: 700;
+  color: var(--text-heading);
+  line-height: 1;
+}
+
+.sub-card-period {
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--text-muted);
+}
+
+.sub-current-badge {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 99px;
+  background: rgba(212,136,58,0.15);
+  color: var(--orange);
+  letter-spacing: 0.04em;
+  width: fit-content;
+}
+.sub-current-badge--pro {
+  background: rgba(92,184,126,0.15);
+  color: var(--green);
+}
+
+.sub-card-includes {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.sub-feature-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex: 1;
+}
+
+.sub-feature-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--text);
+  line-height: 1.4;
+}
+
+.sub-upgrade-btn {
+  width: 100%;
+  padding: 12px;
+  background: var(--green);
+  color: #0a1a10;
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 600;
+  border: none;
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: opacity 0.15s;
+  margin-top: auto;
+}
+.sub-upgrade-btn:hover { opacity: 0.88; }
+
+.sub-manage-btn {
+  width: 100%;
+  padding: 12px;
+  background: none;
+  color: var(--text-muted);
+  font-family: var(--font-body);
+  font-size: 13px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+  margin-top: auto;
+}
+.sub-manage-btn:hover { color: var(--text); border-color: rgba(255,255,255,0.2); }
+
+@media (max-width: 640px) {
+  .sub-cards { grid-template-columns: 1fr; }
+  .sub-body  { padding: 32px 16px; }
+}
