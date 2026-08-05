@@ -1,6 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { createClient } from '@/lib/supabase/server';
-import { checkRateLimit, rateLimitResponse } from '@/lib/rateLimit';
+import { checkRateLimit, checkDurableRateLimit, rateLimitResponse } from '@/lib/rateLimit';
 import { hasAiEntitlement, aiLockedResponse } from '@/lib/aiEntitlement';
 import { NextRequest } from 'next/server';
 
@@ -9,8 +9,12 @@ export async function POST(req: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return new Response('Unauthorized', { status: 401 });
 
+  // Burst limit (per instance), then durable hourly/daily ceilings.
   const rl = checkRateLimit(user.id, 'chat', 30);
   if (!rl.ok) return rateLimitResponse(rl.retryAfter!);
+
+  const durable = await checkDurableRateLimit(user.id, 'chat');
+  if (!durable.ok) return rateLimitResponse(durable.retryAfter!);
 
   if (!(await hasAiEntitlement(user.id))) return aiLockedResponse();
 

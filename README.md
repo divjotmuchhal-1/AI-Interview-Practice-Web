@@ -112,9 +112,29 @@ Copy `.env.local.example` to `.env.local` and fill in real values:
   the file does not remove it from git history, and history can be recovered from
   any clone.
 
-One-time Supabase setup: run the SQL in `supabase/` in the SQL editor:
-`issue_reports.sql` (issue-report table) and `consume_session.sql` (atomic session
-counting; the consume endpoint fails without it).
+One-time Supabase setup: run each file in `supabase/` in the SQL editor.
+
+| File | Purpose | If not run |
+|---|---|---|
+| `issue_reports.sql` | Issue-report table | Report modal falls back to mailto |
+| `consume_session.sql` | Atomic session counting | Starting a session fails (500) |
+| `rate_limits.sql` | Durable hourly/daily API limits | Only per-minute in-memory limits apply |
+
+### Rate limiting
+
+Two layers protect the AI endpoints from draining API credits:
+
+1. **Per-minute, in-memory** (`lib/rateLimit.ts`): chat 30/min, grade 5/min,
+   solution 10/min. Stops bursts. Resets when a serverless instance recycles, so
+   it is burst protection only, not a real ceiling.
+2. **Hourly and daily, in Postgres** (`AI_LIMITS` in `lib/rateLimit.ts`, counted by
+   `check_rate_limit`): chat 100/hour and 400/day, grade and solution 20/hour and
+   60/day. These survive instance recycling and are the actual spend ceiling.
+
+Both are per-user. On top of them, monthly session quotas (2 free / 60 Pro) gate AI
+access entirely via `lib/aiEntitlement.ts`. If the database is unreachable the
+durable check fails open, leaving the in-memory limiter in place, so a database
+blip degrades protection rather than taking the app down.
 
 ## Deploying
 

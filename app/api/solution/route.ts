@@ -1,6 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { createClient } from '@/lib/supabase/server';
-import { checkRateLimit, rateLimitResponse } from '@/lib/rateLimit';
+import { checkRateLimit, checkDurableRateLimit, rateLimitResponse } from '@/lib/rateLimit';
 import { NextRequest } from 'next/server';
 
 export async function POST(req: NextRequest) {
@@ -10,6 +10,9 @@ export async function POST(req: NextRequest) {
 
   const rl = checkRateLimit(user.id, 'solution', 10);
   if (!rl.ok) return rateLimitResponse(rl.retryAfter!);
+
+  const durable = await checkDurableRateLimit(user.id, 'solution');
+  if (!durable.ok) return rateLimitResponse(durable.retryAfter!);
 
   const { buggyCode, readme, partTitle, language } = await req.json();
   if (!buggyCode || !readme) return new Response('Missing fields', { status: 400 });
