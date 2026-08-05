@@ -54,15 +54,8 @@ export default function Workspace({ scenario, onBack, onEndSession, isAiLocked, 
     return () => clearInterval(id);
   }, [practiceMode]);
 
-  // Fire the time's-up moment exactly once.
   const [showTimeUp, setShowTimeUp] = useState(false);
   const timeUpFiredRef = useRef(false);
-  useEffect(() => {
-    if (practiceMode || secondsLeft > 0 || timeUpFiredRef.current) return;
-    timeUpFiredRef.current = true;
-    logEvent('timer_expired', { limitSeconds: totalSeconds });
-    setShowTimeUp(true);
-  }, [secondsLeft, practiceMode, logEvent, totalSeconds]);
 
   const isCodeReview = scenario.type === 'code-review';
 
@@ -82,6 +75,16 @@ export default function Workspace({ scenario, onBack, onEndSession, isAiLocked, 
       { type, t: Date.now() - sessionStart.current, data },
     ]);
   }, []);
+
+  // Fire the time's-up moment exactly once. Must come after logEvent is
+  // declared: the dependency array is evaluated during render, so referencing
+  // logEvent earlier hits its temporal dead zone and throws.
+  useEffect(() => {
+    if (practiceMode || secondsLeft > 0 || timeUpFiredRef.current) return;
+    timeUpFiredRef.current = true;
+    logEvent('timer_expired', { limitSeconds: totalSeconds });
+    setShowTimeUp(true);
+  }, [secondsLeft, practiceMode, logEvent, totalSeconds]);
 
   // ── Part switching ───────────────────────────────────────────────────────────
   // Keep per-part file snapshots so navigating back restores the user's edits.
