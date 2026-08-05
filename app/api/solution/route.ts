@@ -1,6 +1,7 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { createClient } from '@/lib/supabase/server';
 import { checkRateLimit, checkDurableRateLimit, rateLimitResponse } from '@/lib/rateLimit';
+import { MAX_CHARS, readJsonCapped } from '@/lib/inputLimits';
 import { NextRequest } from 'next/server';
 
 export async function POST(req: NextRequest) {
@@ -14,12 +15,20 @@ export async function POST(req: NextRequest) {
   const durable = await checkDurableRateLimit(user.id, 'solution');
   if (!durable.ok) return rateLimitResponse(durable.retryAfter!);
 
-  const { buggyCode, readme, partTitle, language } = await req.json();
-  if (!buggyCode || !readme) return new Response('Missing fields', { status: 400 });
+  const parsed = await readJsonCapped<{
+    buggyCode?: unknown; readme?: unknown; partTitle?: unknown; language?: unknown;
+  }>(req, MAX_CHARS.solution);
+  if (!parsed.ok) return parsed.response;
+
+  const { buggyCode, readme, partTitle, language } = parsed.data;
+  if (typeof buggyCode !== 'string' || !buggyCode || typeof readme !== 'string' || !readme) {
+    return new Response('Missing fields', { status: 400 });
+  }
 
   const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
-  const lang = language ?? 'Python';
+  const lang  = typeof language === 'string' && language ? language.slice(0, 40) : 'Python';
+  const title = typeof partTitle === 'string' ? partTitle.slice(0, 200) : 'Unknown';
   const fence = lang.toLowerCase() === 'sql' ? 'sql'
     : lang.toLowerCase().startsWith('type') ? 'typescript'
     : lang.toLowerCase().startsWith('java') ? 'javascript'
@@ -27,7 +36,7 @@ export async function POST(req: NextRequest) {
 
   const prompt = `You are reviewing a buggy ${lang} implementation from a coding interview practice scenario.
 
-Part: ${partTitle ?? 'Unknown'}
+Part: ${title}
 
 README (describes what is wrong):
 ${readme}

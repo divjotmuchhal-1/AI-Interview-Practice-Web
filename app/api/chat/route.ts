@@ -2,6 +2,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import { createClient } from '@/lib/supabase/server';
 import { checkRateLimit, checkDurableRateLimit, rateLimitResponse } from '@/lib/rateLimit';
 import { hasAiEntitlement, aiLockedResponse } from '@/lib/aiEntitlement';
+import { MAX_CHARS, MAX_MESSAGES, readJsonCapped, promptSize, tooLargeResponse } from '@/lib/inputLimits';
 import { NextRequest } from 'next/server';
 
 export async function POST(req: NextRequest) {
@@ -18,7 +19,22 @@ export async function POST(req: NextRequest) {
 
   if (!(await hasAiEntitlement(user.id))) return aiLockedResponse();
 
-  const body = await req.json();
+  const parsed = await readJsonCapped<{ system?: unknown; messages?: unknown; max_tokens?: number }>(
+    req, MAX_CHARS.chat,
+  );
+  if (!parsed.ok) return parsed.response;
+  const body = parsed.data;
+
+  if (!Array.isArray(body.messages) || body.messages.length === 0) {
+    return Response.json({ error: 'messages_required' }, { status: 400 });
+  }
+  if (body.messages.length > MAX_MESSAGES) {
+    return Response.json({ error: 'too_many_messages' }, { status: 413 });
+  }
+  // Guard the text that actually reaches the model, not just the raw body.
+  if (promptSize(body.system, body.messages) > MAX_CHARS.chat) {
+    return tooLargeResponse(MAX_CHARS.chat);
+  }
 
   const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
@@ -27,8 +43,8 @@ export async function POST(req: NextRequest) {
   const stream = client.messages.stream({
     model:      'claude-sonnet-4-6',
     max_tokens: Math.min(body.max_tokens ?? 1024, 2048),
-    system:     body.system,
-    messages:   body.messages,
+    system:     body.system as Anthropic.MessageCreateParams['system'],
+    messages:   body.messages as Anthropic.MessageParam[],
   });
 
   const readable = new ReadableStream({

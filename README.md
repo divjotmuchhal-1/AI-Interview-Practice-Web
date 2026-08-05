@@ -136,6 +136,23 @@ access entirely via `lib/aiEntitlement.ts`. If the database is unreachable the
 durable check fails open, leaving the in-memory limiter in place, so a database
 blip degrades protection rather than taking the app down.
 
+### Input size caps
+
+Rate limits bound how *many* AI requests a user makes; `lib/inputLimits.ts` bounds
+how *large* each one is. `max_tokens` on the Anthropic call only caps output, and
+App Router route handlers have no default body-size limit, so without this a caller
+could paste a huge payload and bill it as input tokens.
+
+| Route | Cap | Also enforced |
+|---|---|---|
+| `/api/chat` | 80,000 chars (~20k tokens) | max 60 messages; text measured after parsing |
+| `/api/grade` | 40,000 chars | prompt must be a non-empty string |
+| `/api/solution` | 40,000 chars | code and readme must be non-empty strings |
+| `/api/report` | 200,000 chars | description truncated to 5,000 before insert |
+
+Oversized requests get `413` before the body is parsed or forwarded. The largest
+real scenario context is ~5k characters, so these leave wide headroom.
+
 ## Deploying
 
 1. Push to GitHub, import into Vercel, set all env vars above with production

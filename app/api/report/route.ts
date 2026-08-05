@@ -2,8 +2,12 @@ import { NextResponse, NextRequest } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { checkRateLimit, rateLimitResponse } from '@/lib/rateLimit';
+import { readJsonCapped } from '@/lib/inputLimits';
 
 const MAX_DESCRIPTION = 5000;
+// Reports carry a code snapshot; cap the whole payload so the table cannot be
+// bloated with arbitrarily large bodies.
+const MAX_REPORT_CHARS = 200_000;
 
 export async function POST(req: NextRequest) {
   const supabase = await createClient();
@@ -13,7 +17,10 @@ export async function POST(req: NextRequest) {
   const rl = checkRateLimit(user.id, 'report', 5);
   if (!rl.ok) return rateLimitResponse(rl.retryAfter!);
 
-  const body = await req.json().catch(() => null);
+  const parsed = await readJsonCapped<Record<string, unknown>>(req, MAX_REPORT_CHARS);
+  if (!parsed.ok) return parsed.response;
+
+  const body = parsed.data;
   const description = (body?.description ?? '').toString().trim();
   if (!description) {
     return NextResponse.json({ ok: false, error: 'description_required' }, { status: 400 });

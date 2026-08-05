@@ -2,6 +2,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import { createClient } from '@/lib/supabase/server';
 import { checkRateLimit, checkDurableRateLimit, rateLimitResponse } from '@/lib/rateLimit';
 import { hasAiEntitlement, aiLockedResponse } from '@/lib/aiEntitlement';
+import { MAX_CHARS, readJsonCapped } from '@/lib/inputLimits';
 import { NextRequest } from 'next/server';
 
 export async function POST(req: NextRequest) {
@@ -19,7 +20,14 @@ export async function POST(req: NextRequest) {
   // limit must not burn API spend.
   if (!(await hasAiEntitlement(user.id))) return aiLockedResponse();
 
-  const { prompt } = await req.json();
+  const parsed = await readJsonCapped<{ prompt?: unknown }>(req, MAX_CHARS.grade);
+  if (!parsed.ok) return parsed.response;
+
+  const { prompt } = parsed.data;
+  if (typeof prompt !== 'string' || !prompt.trim()) {
+    return Response.json({ error: 'prompt_required' }, { status: 400 });
+  }
+
   const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
   const msg = await client.messages.create({
