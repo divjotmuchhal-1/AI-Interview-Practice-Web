@@ -171,6 +171,23 @@ unhandled 500.
 Database error messages are logged server-side and never returned to the client,
 so schema details do not leak through failed inserts.
 
+### Database access (SQL injection)
+
+No SQL is ever assembled from strings. Every server query goes through the
+Supabase query builder (`.from().select().eq()`) or `.rpc()` with named
+parameters, both of which parameterize values, so user input is always data and
+never executable SQL.
+
+The `security definer` functions in `supabase/` use plpgsql with typed parameters
+and contain no dynamic SQL (`EXECUTE`), and each pins `set search_path = public`
+so a caller cannot hijack name resolution.
+
+The SQL practice track is not an exception: user-written queries run in **sql.js
+(SQLite compiled to WebAssembly) inside the user's own browser tab**, against a
+throwaway in-memory database seeded per test. `utils/testRunner.js` is never
+imported by any API route or server module, so scenario SQL cannot reach the
+production database.
+
 ## Deploying
 
 1. Push to GitHub, import into Vercel, set all env vars above with production
