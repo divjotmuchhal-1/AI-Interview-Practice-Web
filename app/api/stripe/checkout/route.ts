@@ -26,6 +26,24 @@ export async function POST() {
       user_id:            user.id,
       stripe_customer_id: customerId,
     });
+  } else {
+    // Guard against duplicate subscriptions: checkout would happily create a
+    // second one on the same customer and bill for both. Stripe is queried
+    // directly rather than trusting our status column, which can lag if a
+    // webhook was missed. An already-subscribed user is sent to the billing
+    // portal to manage what they have.
+    const existing = await stripe.subscriptions.list({
+      customer: customerId,
+      status: 'active',
+      limit: 1,
+    });
+    if (existing.data.length > 0) {
+      const portal = await stripe.billingPortal.sessions.create({
+        customer:   customerId,
+        return_url: `${process.env.NEXT_PUBLIC_APP_URL}/practice`,
+      });
+      return NextResponse.json({ url: portal.url, alreadySubscribed: true });
+    }
   }
 
   const session = await stripe.checkout.sessions.create({
