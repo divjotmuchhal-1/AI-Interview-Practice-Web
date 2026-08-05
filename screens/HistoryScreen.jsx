@@ -95,7 +95,10 @@ export default function HistoryScreen({ onBack, onViewSession }) {
     fetch('/api/sessions')
       .then((r) => r.json())
       .then(({ sessions }) => setSessions(sessions ?? []))
-      .catch((e) => setError(e.message))
+      .catch((e) => {
+        console.error('session history load failed:', e);
+        setError('Could not load your session history. Try again in a moment.');
+      })
       .finally(() => setLoading(false));
   }, []);
 

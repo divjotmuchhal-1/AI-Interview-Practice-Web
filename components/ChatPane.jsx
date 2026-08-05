@@ -249,7 +249,17 @@ export default function ChatPane({
         }),
       });
 
-      if (!res.ok) throw new Error(await res.text());
+      // Map status codes to messages the user can act on. The response body is
+      // never shown: it can carry server or provider detail.
+      if (!res.ok) {
+        const byStatus = {
+          401: 'Your session expired. Refresh the page and sign in again.',
+          403: 'You have used all your AI sessions for this month.',
+          413: 'That message is too long. Try a shorter question.',
+          429: 'Too many requests. Wait a moment and try again.',
+        };
+        throw new Error(byStatus[res.status] ?? 'The AI coach is unavailable right now. Try again in a moment.');
+      }
 
       const reader = res.body.getReader();
       const dec    = new TextDecoder();
@@ -265,28 +275,39 @@ export default function ChatPane({
 
         for (const chunk of parts) {
           if (!chunk.startsWith('data: ')) continue;
+
+          // Parse defensively, but handle events outside the try so a thrown
+          // stream error is not swallowed by the parse catch.
+          let ev;
           try {
-            const ev = JSON.parse(chunk.slice(6));
-            if (ev.type === 'message_start') {
-              const u = ev.message?.usage ?? {};
-              console.log(
-                '%c[AI cost] input=%d output=%d cache_created=%d cache_read=%d window=%d/%d msgs',
-                'color:#c9a555;font-size:11px',
-                u.input_tokens ?? 0, u.output_tokens ?? 0,
-                u.cache_creation_input_tokens ?? 0, u.cache_read_input_tokens ?? 0,
-                apiMessages.length, history.length,
-              );
+            ev = JSON.parse(chunk.slice(6));
+          } catch (_) {
+            continue;
+          }
+
+          if (ev.type === 'stream_error') {
+            throw new Error('The AI coach stopped unexpectedly. Try again in a moment.');
+          }
+
+          if (ev.type === 'message_start') {
+            const u = ev.message?.usage ?? {};
+            console.log(
+              '%c[AI cost] input=%d output=%d cache_created=%d cache_read=%d window=%d/%d msgs',
+              'color:#c9a555;font-size:11px',
+              u.input_tokens ?? 0, u.output_tokens ?? 0,
+              u.cache_creation_input_tokens ?? 0, u.cache_read_input_tokens ?? 0,
+              apiMessages.length, history.length,
+            );
+          }
+          if (ev.type === 'content_block_delta' && ev.delta?.type === 'text_delta') {
+            accumulated += ev.delta.text;
+            if (!abortedRef.current) {
+              setMessages((prev) => [
+                ...prev.slice(0, -1),
+                { role: 'assistant', content: accumulated, streaming: true },
+              ]);
             }
-            if (ev.type === 'content_block_delta' && ev.delta?.type === 'text_delta') {
-              accumulated += ev.delta.text;
-              if (!abortedRef.current) {
-                setMessages((prev) => [
-                  ...prev.slice(0, -1),
-                  { role: 'assistant', content: accumulated, streaming: true },
-                ]);
-              }
-            }
-          } catch (_) {}
+          }
         }
       }
 

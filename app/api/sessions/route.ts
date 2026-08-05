@@ -79,6 +79,9 @@ export async function GET() {
     .order('completed_at', { ascending: false })
     .limit(50);
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) {
+    console.error('session list failed:', error.message);
+    return NextResponse.json({ error: 'query_failed' }, { status: 500 });
+  }
   return NextResponse.json({ sessions: data ?? [] });
 }

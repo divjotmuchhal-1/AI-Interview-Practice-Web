@@ -54,6 +54,12 @@ export async function POST(req: NextRequest) {
         for await (const event of stream) {
           controller.enqueue(enc.encode(`data: ${JSON.stringify(event)}\n\n`));
         }
+      } catch (err) {
+        // Provider failures are logged server-side only. The client gets a
+        // generic marker so it can show a friendly message without seeing
+        // upstream error text.
+        console.error('chat stream failed:', err instanceof Error ? err.message : err);
+        controller.enqueue(enc.encode(`data: ${JSON.stringify({ type: 'stream_error' })}\n\n`));
       } finally {
         controller.close();
       }

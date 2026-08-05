@@ -121,7 +121,15 @@ export default function ReviewScreen({ events, scenario, onBack, preloadedGrade 
           .then((r) => r.ok && setSaved(true))
           .catch(() => {});
       })
-      .catch((err) => setGradeError(`Grading failed: ${err.message}`))
+      // Internal error text stays in the console; users see a plain message.
+      .catch((err) => {
+        console.error('grading failed:', err);
+        setGradeError(
+          err?.message === 'AI session limit reached for this month'
+            ? err.message
+            : 'Scoring is unavailable right now. Your session signals are shown below.',
+        );
+      })
       .finally(() => setGrading(false));
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
