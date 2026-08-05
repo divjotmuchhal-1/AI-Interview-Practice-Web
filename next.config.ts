@@ -14,6 +14,15 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       {
+        // Monaco assets are versioned by the pinned monaco-editor dependency and
+        // regenerated on install, so they can be cached indefinitely. Without
+        // this every visit re-downloads several MB of editor.
+        source: '/monaco/:path*',
+        headers: [
+          { key: 'Cache-Control', value: 'public, max-age=31536000, immutable' },
+        ],
+      },
+      {
         source: '/:path*',
         headers: [
           // No page in this app should ever be framed (clickjacking defense).

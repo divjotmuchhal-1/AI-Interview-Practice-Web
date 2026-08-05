@@ -42,6 +42,13 @@ export async function middleware(request: NextRequest) {
   return supabaseResponse;
 }
 
+// Middleware makes a network call to Supabase (getUser) on every matched
+// request, so static assets must be excluded: a workspace page pulls dozens of
+// Monaco chunks, and running an auth check for each one wastes an edge
+// invocation and a Supabase round trip per file, and lets anyone amplify cost
+// by requesting public assets in a loop.
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)'],
+  matcher: [
+    '/((?!_next/static|_next/image|favicon.ico|monaco/|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|woff|woff2|ttf)$).*)',
+  ],
 };
