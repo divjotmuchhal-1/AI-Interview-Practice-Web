@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import RadarChart from '@/components/RadarChart';
-import { computeMetrics, buildGradingPrompt, buildCodeReviewGradingPrompt } from '@/utils/scoring';
+import { computeMetrics, buildGradingPrompt, buildCodeReviewGradingPrompt, redactLeakedAnswer } from '@/utils/scoring';
 
 function fmtMs(ms) {
   if (ms === null || ms === undefined) return '–';
@@ -97,7 +97,12 @@ export default function ReviewScreen({ events, scenario, onBack, preloadedGrade 
         if (error === 'ai_feedback_locked') throw new Error('AI session limit reached for this month');
         const jsonMatch = text.match(/\{[\s\S]*\}/);
         if (!jsonMatch) throw new Error('No JSON in response');
-        const gradeData = JSON.parse(jsonMatch[0]);
+        // Grading prompts contain the answer key and their output is shown to
+        // the candidate: drop any field that reproduces answer content.
+        const gradeData = redactLeakedAnswer(
+          JSON.parse(jsonMatch[0]),
+          scenario.parts?.[0]?.answer ?? '',
+        );
         if (metrics.answerViewCount > 0) {
           gradeData.scores.independence = Math.min(gradeData.scores.independence ?? 0, 25);
           gradeData.scores.diagnosis    = Math.min(gradeData.scores.diagnosis    ?? 0, 35);

@@ -171,6 +171,28 @@ unhandled 500.
 Database error messages are logged server-side and never returned to the client,
 so schema details do not leak through failed inserts.
 
+### Prompt injection
+
+Users type text that reaches the model, so any prompt that mixes instructions
+with candidate-authored text is an injection surface.
+
+- **No secrets in prompts.** The chat coach's system prompt contains only the
+  scenario title, README, the user's own code, and test results. It never
+  contains the answer key, so no chat injection can extract one.
+- **No capabilities.** The AI features are text-in/text-out: no tools, no
+  function calling, no database access. The model cannot read another user's
+  data or take an action even if fully persuaded.
+- **Grading prompts are the sensitive case**, because they legitimately contain
+  the answer key and their output is shown to the candidate. Candidate text
+  (chat messages, review findings) is wrapped in an `untrusted_candidate_text`
+  fence, with the fence markers stripped from the input so the block cannot be
+  closed early, plus explicit rules to treat that text as evidence only and never
+  reproduce ground truth.
+- **Output is checked independently** (`redactLeakedAnswer` in `utils/scoring.js`):
+  if any generated field reproduces a long verbatim span from the answer, that
+  field is replaced before display. Model instructions are guidance, not a
+  guarantee, so disclosure is blocked at the output boundary too.
+
 ### Database access (SQL injection)
 
 No SQL is ever assembled from strings. Every server query goes through the
