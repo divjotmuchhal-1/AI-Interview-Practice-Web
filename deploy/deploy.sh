@@ -21,9 +21,10 @@ fi
 git reset --hard origin/main
 
 echo "==> Installing dependencies"
-# npm ci is reproducible and also runs postinstall, which copies Monaco into
-# public/monaco. Monaco is gitignored, so this step is what puts it on disk.
-npm ci --omit=dev --no-audit --fund=false || npm ci --no-audit --fund=false
+# Full install, including devDependencies: `next build` needs typescript and the
+# @types packages, which live there. This also runs postinstall, which copies
+# Monaco into public/monaco (gitignored, so this is what puts it on disk).
+npm ci --no-audit --fund=false
 
 echo "==> Building"
 # Next writes to .next; if the build fails the previous .next stays in place
