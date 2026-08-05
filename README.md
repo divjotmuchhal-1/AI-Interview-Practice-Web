@@ -153,6 +153,24 @@ could paste a huge payload and bill it as input tokens.
 Oversized requests get `413` before the body is parsed or forwarded. The largest
 real scenario context is ~5k characters, so these leave wide headroom.
 
+### Server-side validation
+
+Browser validation is a UX affordance only: any client can be bypassed with curl,
+so every value that reaches the database or an external API is coerced and bounded
+on the server via `lib/validate.ts`. The helpers never throw; they clamp or return a
+safe default so a malformed request yields a clean 400 or a bounded row, never an
+unhandled 500.
+
+- Numbers are clamped to explicit ranges; non-finite input (NaN, Infinity) falls
+  back rather than clamping, so `Infinity` cannot become a maximum score.
+- Strings are type-checked, trimmed, and truncated per column.
+- Objects reject arrays and null; booleans require a literal `true`.
+- Arrays (session event logs) are capped by both item count and total size.
+- Identity is always taken from the verified server session, never from the body.
+
+Database error messages are logged server-side and never returned to the client,
+so schema details do not leak through failed inserts.
+
 ## Deploying
 
 1. Push to GitHub, import into Vercel, set all env vars above with production

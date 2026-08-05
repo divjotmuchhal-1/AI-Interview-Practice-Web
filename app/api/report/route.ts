@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { checkRateLimit, rateLimitResponse } from '@/lib/rateLimit';
 import { readJsonCapped } from '@/lib/inputLimits';
+import { str, requiredStr, nullableNum, obj } from '@/lib/validate';
 
 const MAX_DESCRIPTION = 5000;
 // Reports carry a code snapshot; cap the whole payload so the table cannot be
@@ -21,7 +22,7 @@ export async function POST(req: NextRequest) {
   if (!parsed.ok) return parsed.response;
 
   const body = parsed.data;
-  const description = (body?.description ?? '').toString().trim();
+  const description = requiredStr(body?.description, MAX_DESCRIPTION);
   if (!description) {
     return NextResponse.json({ ok: false, error: 'description_required' }, { status: 400 });
   }
@@ -30,12 +31,12 @@ export async function POST(req: NextRequest) {
   const { error } = await admin.from('issue_reports').insert({
     user_id:        user.id,
     user_email:     user.email ?? null,
-    scenario_id:    (body?.scenarioId ?? '').toString().slice(0, 200),
-    scenario_title: (body?.scenarioTitle ?? '').toString().slice(0, 300),
-    part_index:     Number.isInteger(body?.partIndex) ? body.partIndex : null,
-    part_title:     (body?.partTitle ?? '').toString().slice(0, 300),
-    description:    description.slice(0, MAX_DESCRIPTION),
-    code_snapshot:  body?.files && typeof body.files === 'object' ? body.files : null,
+    scenario_id:    str(body?.scenarioId, 200),
+    scenario_title: str(body?.scenarioTitle, 300),
+    part_index:     nullableNum(body?.partIndex, 0, 100),
+    part_title:     str(body?.partTitle, 300),
+    description,
+    code_snapshot:  Object.keys(obj(body?.files)).length > 0 ? obj(body?.files) : null,
   });
 
   if (error) {
