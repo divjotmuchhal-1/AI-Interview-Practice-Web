@@ -40,17 +40,29 @@ export function useTier() {
       .catch(() => {});
   }, [fetchSub]);
 
-  const upgradeToPro = useCallback(async () => {
-    const res = await fetch('/api/stripe/checkout', { method: 'POST' });
-    const { url } = await res.json();
-    window.location.href = url;
+  // Both flows redirect to a Stripe-hosted page. Parsing is guarded because an
+  // error response may have no body, which would throw on res.json().
+  const goToStripe = useCallback(async (endpoint, failureMessage) => {
+    try {
+      const res = await fetch(endpoint, { method: 'POST' });
+      const data = await res.json().catch(() => null);
+      if (!res.ok || !data?.url) throw new Error(data?.error ?? 'no_url');
+      window.location.href = data.url;
+    } catch (err) {
+      console.error(endpoint + ' failed:', err);
+      alert(failureMessage);
+    }
   }, []);
 
-  const manageSub = useCallback(async () => {
-    const res = await fetch('/api/stripe/portal', { method: 'POST' });
-    const { url } = await res.json();
-    window.location.href = url;
-  }, []);
+  const upgradeToPro = useCallback(
+    () => goToStripe('/api/stripe/checkout', 'Could not start checkout. Please try again in a moment.'),
+    [goToStripe],
+  );
+
+  const manageSub = useCallback(
+    () => goToStripe('/api/stripe/portal', 'Could not open billing management. Please try again in a moment.'),
+    [goToStripe],
+  );
 
   return {
     tier,

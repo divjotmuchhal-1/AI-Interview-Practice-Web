@@ -18,13 +18,19 @@ export async function POST() {
     .single();
 
   if (!sub?.stripe_customer_id) {
-    return NextResponse.json({ error: 'No subscription found' }, { status: 400 });
+    return NextResponse.json({ error: 'no_subscription' }, { status: 400 });
   }
 
-  const session = await stripe.billingPortal.sessions.create({
-    customer:   sub.stripe_customer_id,
-    return_url: `${process.env.NEXT_PUBLIC_APP_URL}/practice`,
-  });
-
-  return NextResponse.json({ url: session.url });
+  try {
+    const session = await stripe.billingPortal.sessions.create({
+      customer:   sub.stripe_customer_id,
+      return_url: `${process.env.NEXT_PUBLIC_APP_URL}/practice`,
+    });
+    return NextResponse.json({ url: session.url });
+  } catch (err) {
+    // Most likely a customer from another Stripe mode, or the live-mode portal
+    // configuration not being saved yet.
+    console.error('portal session failed:', err instanceof Error ? err.message : err);
+    return NextResponse.json({ error: 'portal_unavailable' }, { status: 500 });
+  }
 }
