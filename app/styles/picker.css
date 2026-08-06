@@ -30,16 +30,26 @@
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 24px;
+  gap: 16px 24px;
+  /* The right side carries a variable-width tier banner. Let it drop to its own
+     row rather than squeezing the brand block into a narrow column. */
+  flex-wrap: wrap;
 }
 
-.picker-header-left { flex: 1; }
+/* Never shrink the brand: without this the logo wrapped to three lines
+   whenever the free-tier banner was wide. */
+.picker-header-left {
+  flex: 0 1 auto;
+  min-width: 260px;
+}
 
 .picker-header-right {
   display: flex;
   align-items: center;
   gap: 10px;
-  flex-shrink: 0;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  margin-left: auto;
   padding-top: 4px;
 }
 
@@ -66,6 +76,7 @@
   color: var(--text-heading);
   letter-spacing: -0.4px;
   line-height: 1;
+  white-space: nowrap;
 }
 
 .picker-subtitle {
@@ -73,6 +84,7 @@
   color: var(--text-muted);
   font-size: 13px;
   line-height: 1.5;
+  text-wrap: balance;
 }
 
 .stats-row {
@@ -725,7 +737,9 @@
 .tier-badge--pro  { background: rgba(92,184,126,0.18); color: var(--green); }
 
 .tier-usage { flex: 0 0 auto; display: flex; flex-direction: column; gap: 4px; }
-.tier-text  { color: var(--text-muted); }
+/* The exhausted-free message is long; keep it on one line so the banner does
+   not grow tall and push the header layout around. */
+.tier-text  { color: var(--text-muted); white-space: nowrap; }
 
 .tier-bar-wrap {
   height: 3px;
