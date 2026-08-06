@@ -11,9 +11,11 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.54.0",
     "@monaco-editor/react": "^4.7.0",
+    "@sentry/nextjs": "^10.69.0",
     "@stripe/stripe-js": "^9.9.0",
     "@supabase/ssr": "^0.6.1",
     "@supabase/supabase-js": "^2.49.4",
+    "@vercel/analytics": "^2.0.1",
     "monaco-editor": "^0.56.0",
     "next": "^15.3.3",
     "react": "^19.0.0",
