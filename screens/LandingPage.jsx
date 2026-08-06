@@ -188,6 +188,7 @@ export default function LandingPage() {
             <span className="lp-brand-name">AI Interview Practice</span>
           </div>
           <div className="lp-nav-actions">
+            <a href="#pricing" className="lp-nav-link">Pricing</a>
             <Link href="/login" className="lp-nav-link">Sign in</Link>
             <Link href="/login" className="lp-nav-cta">Get started →</Link>
           </div>
@@ -328,6 +329,45 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* Pricing */}
+      <section id="pricing" className="lp-section lp-section--raised">
+        <div className="lp-section-inner">
+          <h2 className="lp-section-h2" data-reveal>Simple pricing</h2>
+          <p className="lp-section-sub" data-reveal data-delay="80">
+            Practice unlimited scenarios for free. Pay only for AI coaching.
+          </p>
+
+          <div className="lp-pricing-grid">
+            <div className="lp-price-card" data-reveal>
+              <div className="lp-price-name">Free</div>
+              <div className="lp-price-amount">$0<span className="lp-price-period">/month</span></div>
+              <p className="lp-price-note">No credit card required</p>
+              <ul className="lp-price-list">
+                <li>2 AI-coached sessions per month</li>
+                <li>Unlimited practice sessions without AI</li>
+                <li>3 practice tracks</li>
+                <li>Full editor, tests, and answer keys</li>
+              </ul>
+              <Link href="/login" className="lp-price-btn">Start free</Link>
+            </div>
+
+            <div className="lp-price-card lp-price-card--pro" data-reveal data-delay="90">
+              <div className="lp-price-badge">Most popular</div>
+              <div className="lp-price-name">Pro</div>
+              <div className="lp-price-amount">$9<span className="lp-price-period">/month</span></div>
+              <p className="lp-price-note">Cancel anytime</p>
+              <ul className="lp-price-list">
+                <li>60 AI-coached sessions per month</li>
+                <li>All 7 tracks, 36 scenarios</li>
+                <li>AI performance grading on every session</li>
+                <li>Full session history and progress tracking</li>
+              </ul>
+              <Link href="/login" className="lp-price-btn lp-price-btn--pro">Get Pro →</Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* CTA */}
       <section className="lp-cta">
         <div className="lp-cta-glow" aria-hidden="true" />
@@ -351,6 +391,7 @@ export default function LandingPage() {
             </div>
             <div className="lp-footer-links">
               <a href="#how" className="lp-footer-link">How it works</a>
+              <a href="#pricing" className="lp-footer-link">Pricing</a>
               <Link href="/login" className="lp-footer-link">Sign in</Link>
               <Link href="/login" className="lp-footer-link lp-footer-link--cta">Create free account →</Link>
             </div>
