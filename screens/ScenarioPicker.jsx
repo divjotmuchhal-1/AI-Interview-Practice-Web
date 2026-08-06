@@ -267,7 +267,7 @@ function TierBanner({ tier, sessionsUsed, sessionLimit, isLocked, daysUntilReset
         <div className="tier-pro-meter">
           <span className="tier-pro-label">
             {isLocked
-              ? <>AI sessions used. Practice still available · resets in {daysUntilReset}d</>
+              ? <>AI sessions used · resets in {daysUntilReset}d</>
               : <><span className="tier-pro-num">{remaining}</span> sessions left</>}
           </span>
           <div className="tier-pro-track">
@@ -287,14 +287,14 @@ function TierBanner({ tier, sessionsUsed, sessionLimit, isLocked, daysUntilReset
       <div className="tier-usage">
         <span className="tier-text">
           {isLocked
-            ? `AI sessions used. Practice mode still available · resets in ${daysUntilReset}d`
-            : `${remaining} of ${sessionLimit} AI sessions remaining this month`}
+            ? `AI sessions used · resets in ${daysUntilReset}d`
+            : `${remaining} of ${sessionLimit} AI sessions left`}
         </span>
         <div className="tier-bar-wrap">
           <div className={`tier-bar ${isLocked ? 'tier-bar--full' : ''}`} style={{ width: `${pct}%` }} />
         </div>
       </div>
-      <button className="tier-upgrade-btn" onClick={onUpgrade}>Upgrade to Pro →</button>
+      <button className="tier-upgrade-btn" onClick={onUpgrade}>Upgrade →</button>
     </div>
   );
 }
@@ -669,7 +669,7 @@ export default function ScenarioPicker({
               <div className="picker-user-menu">
                 {onSubscription && (
                   <button className="picker-user-btn" onClick={onSubscription}>
-                    Subscription Plans
+                    Plans
                   </button>
                 )}
                 {onProfile && (

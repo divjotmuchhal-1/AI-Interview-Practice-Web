@@ -28,29 +28,31 @@
 
 .picker-header-top {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
-  gap: 16px 24px;
-  /* The right side carries a variable-width tier banner. Let it drop to its own
-     row rather than squeezing the brand block into a narrow column. */
-  flex-wrap: wrap;
+  gap: 16px;
 }
 
-/* Never shrink the brand: without this the logo wrapped to three lines
-   whenever the free-tier banner was wide. */
+/* The brand keeps its width; the logo itself never wraps (see .picker-logo).
+   Only the right-hand controls give up space when the row gets tight. */
 .picker-header-left {
-  flex: 0 1 auto;
-  min-width: 260px;
+  flex: 0 0 auto;
 }
 
 .picker-header-right {
   display: flex;
   align-items: center;
   gap: 10px;
-  flex-wrap: wrap;
   justify-content: flex-end;
   margin-left: auto;
-  padding-top: 4px;
+  min-width: 0;
+}
+
+/* Below this width the row genuinely cannot hold both halves, so let the
+   controls drop to their own line instead of overflowing. */
+@media (max-width: 1100px) {
+  .picker-header-top { flex-wrap: wrap; }
+  .picker-header-right { padding-top: 4px; }
 }
 
 .picker-logo-wrap {
