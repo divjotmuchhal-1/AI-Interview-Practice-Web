@@ -27,7 +27,9 @@ function OptionGroup({ title, children }) {
   );
 }
 
-export default function SessionConfigModal({ scenario, aiLocked = false, onCancel, onStart }) {
+export default function SessionConfigModal({
+  scenario, aiLocked = false, sessionsLeft = null, isFree = false, onCancel, onStart,
+}) {
   const [practiceMode,    setPracticeMode]    = useState(false);
   const [hardMode,        setHardMode]        = useState(false);
   const [answerKeyHidden, setAnswerKeyHidden] = useState(false);
@@ -59,6 +61,15 @@ export default function SessionConfigModal({ scenario, aiLocked = false, onCance
           {aiLocked && (
             <div className="scm-ai-locked-note">
               AI sessions used up for this month. This will be a practice run: the editor, tests, and answer key all work, but the AI coach and AI feedback are disabled and the session is not saved to history.
+            </div>
+          )}
+          {/* Free users otherwise see only "2 of 2 AI sessions left", which reads
+              as a hard cap on using the product at all and encourages hoarding.
+              Say plainly that practice itself is never limited. */}
+          {!aiLocked && isFree && sessionsLeft !== null && (
+            <div className="scm-session-cost">
+              Uses 1 of your {sessionsLeft} AI-coached sessions this month.
+              Practising without the AI coach is always unlimited.
             </div>
           )}
         </div>

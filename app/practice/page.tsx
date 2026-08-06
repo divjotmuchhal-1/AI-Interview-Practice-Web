@@ -238,6 +238,8 @@ function PracticePageInner() {
         <SessionConfigModal
           scenario={pendingScenario}
           aiLocked={tier.isLocked}
+          isFree={tier.tier === 'free'}
+          sessionsLeft={Math.max(0, tier.sessionLimit - tier.sessionsUsed)}
           onCancel={() => setPendingScenario(null)}
           onStart={handleStartSession}
         />

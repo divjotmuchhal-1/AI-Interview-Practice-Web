@@ -1240,3 +1240,15 @@
   .onboard-tracks { grid-template-columns: 1fr; }
   .onboard-heading { font-size: 22px; }
 }
+
+/* Explains what starting a session costs, and that practice is never capped. */
+.scm-session-cost {
+  margin-top: 12px;
+  padding: 9px 12px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--text-muted);
+}
