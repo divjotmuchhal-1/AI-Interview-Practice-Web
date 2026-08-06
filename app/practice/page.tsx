@@ -11,6 +11,7 @@ import ProfileScreen from '@/screens/ProfileScreen';
 import ChangePasswordScreen from '@/screens/ChangePasswordScreen';
 import SubscriptionScreen from '@/screens/SubscriptionScreen';
 import SessionConfigModal from '@/components/SessionConfigModal';
+import MobileNotice from '@/components/MobileNotice';
 import { useTier } from '@/hooks/useTier';
 
 type Screen = 'picker' | 'workspace' | 'review' | 'history' | 'historysession' | 'changePassword' | 'profile' | 'profilesession' | 'subscription';
@@ -221,6 +222,7 @@ function PracticePageInner() {
 
   return (
     <>
+      <MobileNotice />
       {pendingScenario && (
         <SessionConfigModal
           scenario={pendingScenario}
