@@ -5,6 +5,7 @@ export const dynamic = 'force-dynamic';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
+import { track } from '@/lib/track';
 
 type Mode = 'sign_in' | 'sign_up' | 'forgot' | 'reset';
 
@@ -89,7 +90,10 @@ export default function LoginPage() {
         },
       });
       if (error) setError(error.message);
-      else setInfo('Check your email for a confirmation link.');
+      else {
+        track('signup_completed', { method: 'email' });
+        setInfo('Check your email for a confirmation link.');
+      }
 
     } else if (mode === 'forgot') {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
@@ -119,6 +123,7 @@ export default function LoginPage() {
   }
 
   async function handleGoogle() {
+    track('signup_started', { method: 'google' });
     const supabase = createClient();
     await supabase.auth.signInWithOAuth({
       provider: 'google',

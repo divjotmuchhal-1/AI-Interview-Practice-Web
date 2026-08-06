@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { track } from '@/lib/track';
 
 export const FREE_SESSION_LIMIT = 2;
 export const FREE_TRACK_LIMIT   = 3;
@@ -55,7 +56,10 @@ export function useTier() {
   }, []);
 
   const upgradeToPro = useCallback(
-    () => goToStripe('/api/stripe/checkout', 'Could not start checkout. Please try again in a moment.'),
+    () => {
+      track('upgrade_clicked');
+      return goToStripe('/api/stripe/checkout', 'Could not start checkout. Please try again in a moment.');
+    },
     [goToStripe],
   );
 

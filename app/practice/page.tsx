@@ -13,6 +13,7 @@ import SubscriptionScreen from '@/screens/SubscriptionScreen';
 import SessionConfigModal from '@/components/SessionConfigModal';
 import MobileNotice from '@/components/MobileNotice';
 import { useTier } from '@/hooks/useTier';
+import { track } from '@/lib/track';
 
 type Screen = 'picker' | 'workspace' | 'review' | 'history' | 'historysession' | 'changePassword' | 'profile' | 'profilesession' | 'subscription';
 
@@ -70,6 +71,7 @@ function PracticePageInner() {
   }, []);
 
   const handleSelectScenario = (scenario: any) => {
+    track('scenario_opened', { scenario: scenario.id });
     setPendingScenario(scenario);
   };
 
@@ -78,6 +80,11 @@ function PracticePageInner() {
     // over the limit are free practice runs: no session consumed, AI coach and
     // AI grading disabled for the whole session.
     const aiEnabled = !tier.isLocked;
+    track('session_started', {
+      scenario: pendingScenario?.id ?? 'unknown',
+      aiEnabled,
+      practiceMode: config.practiceMode,
+    });
     if (aiEnabled) tier.consumeSession();
     setActiveScenario(pendingScenario);
     setSessionConfig({ ...config, aiEnabled });
@@ -213,6 +220,10 @@ function PracticePageInner() {
         daysUntilReset={tier.daysUntilReset}
         onBack={() => { setScreen('picker'); setActiveScenario(null); setSessionConfig(null); }}
         onEndSession={(events: any[]) => {
+          track('session_completed', {
+            scenario: activeScenario.id,
+            aiEnabled: Boolean(sessionConfig.aiEnabled),
+          });
           setSessionData({ events, scenario: activeScenario, aiEnabled: sessionConfig.aiEnabled });
           setScreen('review');
         }}
