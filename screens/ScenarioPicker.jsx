@@ -581,7 +581,9 @@ export default function ScenarioPicker({
   onSignOut,
   onProfile,
 }) {
-  const [openTracks, setOpenTracks] = useState([]);
+  // The first track starts expanded so arriving users see real scenarios rather
+  // than a column of collapsed cards with no obvious next step.
+  const [openTracks, setOpenTracks] = useState(() => (TRACKS[0] ? [TRACKS[0].id] : []));
   const [completedIds, setCompletedIds] = useState(() => new Set());
   const [lastSession, setLastSession] = useState(null);
   const [stats, setStats] = useState({ sessions: 0, solved: 0, avgScore: null });
@@ -597,8 +599,9 @@ export default function ScenarioPicker({
   const handleOnboardingDone = useCallback((trackId) => {
     localStorage.setItem('aip_onboarded', '1');
     setShowOnboarding(false);
+    // Picking a track opens only that one, so the choice is reflected directly.
     if (trackId) {
-      setOpenTracks(prev => prev.includes(trackId) ? prev : [...prev, trackId]);
+      setOpenTracks([trackId]);
       setTimeout(() => {
         document.getElementById(`track-${trackId}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }, 300);

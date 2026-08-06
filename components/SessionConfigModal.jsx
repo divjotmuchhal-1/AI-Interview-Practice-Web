@@ -50,7 +50,12 @@ export default function SessionConfigModal({ scenario, aiLocked = false, onCance
             <span className="scm-duration">{scenario.durationMinutes} min</span>
           </div>
           <h2 className="scm-title">{scenario.title}</h2>
-          <p className="scm-subtitle">Set your session options. These cannot be changed once the session starts.</p>
+          {/* Reassure rather than instruct: the defaults are already the right
+              choice for a first session, so nothing here blocks starting. */}
+          <p className="scm-subtitle">
+            Ready to go with the defaults below. Adjust them if you like, then start.
+            Options are locked once the session begins.
+          </p>
           {aiLocked && (
             <div className="scm-ai-locked-note">
               AI sessions used up for this month. This will be a practice run: the editor, tests, and answer key all work, but the AI coach and AI feedback are disabled and the session is not saved to history.
@@ -119,7 +124,7 @@ export default function SessionConfigModal({ scenario, aiLocked = false, onCance
         </div>
         <div className="scm-footer">
           <button className="scm-cancel" onClick={onCancel} type="button">Cancel</button>
-          <button className="scm-start" onClick={handleStart} type="button">
+          <button className="scm-start" onClick={handleStart} type="button" autoFocus>
             Start Session →
           </button>
         </div>
