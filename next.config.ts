@@ -1,4 +1,5 @@
 import type { NextConfig } from 'next';
+import { withSentryConfig } from '@sentry/nextjs';
 
 const nextConfig: NextConfig = {
   webpack: (config, { isServer }) => {
@@ -40,4 +41,19 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+// Sentry's build plugin injects the browser SDK and, when SENTRY_AUTH_TOKEN is
+// set, uploads source maps so production stack traces show real file and line
+// numbers instead of minified names. Without this wrapper the client SDK is
+// never bundled, so browser errors go unreported even with a valid DSN.
+export default withSentryConfig(nextConfig, {
+  org: 'ai-coding-prep',
+  project: 'javascript-nextjs',
+  // Build logs stay quiet locally; CI still surfaces upload problems.
+  silent: !process.env.CI,
+  widenClientFileUpload: true,
+  // Strips Sentry's own console logging from the production bundle.
+  disableLogger: true,
+  // Source map upload is skipped automatically when no auth token is present,
+  // so builds succeed without one.
+  sourcemaps: { disable: !process.env.SENTRY_AUTH_TOKEN },
+});
