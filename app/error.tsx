@@ -1,8 +1,12 @@
 'use client';
 
 import { useEffect } from 'react';
+import * as Sentry from '@sentry/nextjs';
 
-export default function GlobalError({
+// Route-level boundary: catches render errors anywhere below the root layout.
+// Errors thrown by the root layout itself escape this and are caught by
+// app/global-error.tsx instead.
+export default function AppError({
   error,
   reset,
 }: {
@@ -10,7 +14,10 @@ export default function GlobalError({
   reset: () => void;
 }) {
   useEffect(() => {
-    // Log to console in dev; swap for an error-reporting service (e.g. Sentry) if needed
+    // Without this the boundary swallows the error: the user sees the fallback
+    // and Sentry never hears about it, which is exactly the crash we most need
+    // to know about.
+    Sentry.captureException(error);
     console.error(error);
   }, [error]);
 
