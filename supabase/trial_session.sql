@@ -32,7 +32,7 @@ begin
   if not found then
     insert into user_subscriptions (user_id, status, sessions_used_this_month, sessions_reset_at, trial_used, updated_at)
     values (p_user_id, 'free', 0, now(), true, now());
-    return query select true, 0, 2, true;
+    return query select true, 0, 5, true;
     return;
   end if;
 
@@ -44,12 +44,12 @@ begin
     return query select
       true,
       coalesce(v_row.sessions_used_this_month, 0),
-      case when v_row.status = 'pro' then 60 else 2 end,
+      case when v_row.status = 'pro' then 60 else 5 end,
       true;
     return;
   end if;
 
-  v_limit := case when v_row.status = 'pro' then 60 else 2 end;
+  v_limit := case when v_row.status = 'pro' then 60 else 5 end;
 
   -- Monthly rollover: a new calendar month resets the counter.
   if date_trunc('month', v_row.sessions_reset_at) <> date_trunc('month', now()) then

@@ -1,6 +1,6 @@
 import { createAdminClient } from '@/lib/supabase/admin';
 
-const FREE_SESSION_LIMIT = 2;
+const FREE_SESSION_LIMIT = 5;
 const PRO_SESSION_LIMIT  = 60;
 
 // After a user consumes their final session, AI features (chat, grading) stay

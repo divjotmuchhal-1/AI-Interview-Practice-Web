@@ -70,7 +70,7 @@ export default function SessionConfigModal({
           {!aiLocked && trialAvailable && (
             <div className="scm-session-cost scm-session-cost--trial">
               <strong>Free tryout session.</strong> This one is on us: it does not use
-              any of your {sessionsLeft ?? 2} monthly AI sessions.
+              any of your monthly AI sessions.
             </div>
           )}
           {!aiLocked && !trialAvailable && isFree && sessionsLeft !== null && (

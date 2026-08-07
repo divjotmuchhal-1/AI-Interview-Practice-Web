@@ -33,10 +33,12 @@
   gap: 16px;
 }
 
-/* The brand keeps its width; the logo itself never wraps (see .picker-logo).
-   Only the right-hand controls give up space when the row gets tight. */
+/* The logo never wraps (see .picker-logo), but the subtitle may: without this
+   the brand block held its full max-content width and the tier banner
+   overlapped it once the banner text grew. */
 .picker-header-left {
-  flex: 0 0 auto;
+  flex: 0 1 auto;
+  min-width: 240px;
 }
 
 .picker-header-right {

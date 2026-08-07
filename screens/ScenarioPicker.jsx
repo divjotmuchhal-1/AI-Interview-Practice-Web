@@ -289,7 +289,7 @@ function TierBanner({ tier, sessionsUsed, sessionLimit, isLocked, daysUntilReset
           {isLocked
             ? `AI sessions used · resets in ${daysUntilReset}d`
             : trialAvailable
-              ? `Free tryout session ready · then ${sessionLimit} AI sessions/month`
+              ? `Free tryout ready · then ${sessionLimit}/month`
               : `${remaining} of ${sessionLimit} AI sessions left`}
         </span>
         <div className="tier-bar-wrap">

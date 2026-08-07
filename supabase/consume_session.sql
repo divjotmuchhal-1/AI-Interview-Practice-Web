@@ -1,4 +1,5 @@
 -- Atomic session consumption.
+-- NOTE: superseded by trial_session.sql, which adds the free tryout.
 -- Run this once in the Supabase dashboard: SQL Editor -> New query -> paste -> Run.
 --
 -- Why a database function instead of read-then-write in the API route:
@@ -29,11 +30,11 @@ begin
     -- First ever session for this user.
     insert into user_subscriptions (user_id, status, sessions_used_this_month, sessions_reset_at, updated_at)
     values (p_user_id, 'free', 1, now(), now());
-    return query select true, 1, 2;
+    return query select true, 1, 5;
     return;
   end if;
 
-  v_limit := case when v_row.status = 'pro' then 60 else 2 end;
+  v_limit := case when v_row.status = 'pro' then 60 else 5 end;
 
   -- Monthly rollover: a new calendar month resets the counter.
   if date_trunc('month', v_row.sessions_reset_at) <> date_trunc('month', now()) then

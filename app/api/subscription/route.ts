@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 
-const FREE_SESSION_LIMIT = 2;
+const FREE_SESSION_LIMIT = 5;
 const PRO_SESSION_LIMIT  = 60;
 
 export async function GET() {
