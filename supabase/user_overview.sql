@@ -8,7 +8,14 @@
 -- authenticated roles. Only the service role (and the SQL editor, which runs as
 -- postgres) can read it. Never grant it to anon.
 
-create or replace view user_overview as
+-- Dropped and recreated rather than replaced: CREATE OR REPLACE VIEW cannot add
+-- columns in the middle of the list, only append to the end. Safe to drop, as
+-- nothing in the application reads this view.
+begin;
+
+drop view if exists user_overview;
+
+create view user_overview as
 select
   u.email,
   u.created_at::date                                as signed_up,
@@ -47,3 +54,5 @@ order by u.created_at desc;
 -- Lock it down: emails must not be readable by client-side roles.
 revoke all on user_overview from anon, authenticated, public;
 grant select on user_overview to service_role;
+
+commit;
