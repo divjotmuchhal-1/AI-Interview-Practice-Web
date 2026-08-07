@@ -343,7 +343,7 @@ export default function LandingPage() {
               <div className="lp-price-amount">$0<span className="lp-price-period">/month</span></div>
               <p className="lp-price-note">No credit card required</p>
               <ul className="lp-price-list">
-                <li>5 AI-coached sessions per month</li>
+                <li>2 AI-coached sessions per month</li>
                 <li>Unlimited practice sessions without AI</li>
                 <li>3 practice tracks</li>
                 <li>Full editor, tests, and answer keys</li>

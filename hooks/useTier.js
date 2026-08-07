@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { track } from '@/lib/track';
 
-export const FREE_SESSION_LIMIT = 5;
+export const FREE_SESSION_LIMIT = 2;
 export const FREE_TRACK_LIMIT   = 3;
 export const PRO_SESSION_LIMIT  = 60;
 

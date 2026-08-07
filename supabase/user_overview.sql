@@ -16,7 +16,7 @@ select
   (u.email_confirmed_at is not null)                as confirmed,
   coalesce(s.status, 'free')                        as plan,
   coalesce(s.sessions_used_this_month, 0)           as ai_sessions_used,
-  case when s.status = 'pro' then 60 else 5 end     as ai_session_limit,
+  case when s.status = 'pro' then 60 else 2 end     as ai_session_limit,
   coalesce(g.graded_sessions, 0)                    as graded_sessions,
   g.avg_score,
   g.last_session,
