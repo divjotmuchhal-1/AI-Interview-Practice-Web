@@ -86,6 +86,24 @@ function PracticePageInner() {
       practiceMode: config.practiceMode,
     });
     if (aiEnabled) tier.consumeSession();
+
+    // Record the start server-side. Unlike consumeSession this fires for every
+    // start including practice runs, so a scenario opened and then abandoned
+    // still leaves a row. Fire and forget: telemetry must never delay or block
+    // the user getting into the workspace.
+    fetch('/api/sessions/start', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({
+        scenario: {
+          id:         pendingScenario?.id,
+          title:      pendingScenario?.title,
+          difficulty: pendingScenario?.difficulty,
+        },
+        config: { ...config, aiEnabled },
+      }),
+    }).catch(() => {});
+
     setActiveScenario(pendingScenario);
     setSessionConfig({ ...config, aiEnabled });
     setPendingScenario(null);
