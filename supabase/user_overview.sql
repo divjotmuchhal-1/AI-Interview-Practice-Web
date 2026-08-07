@@ -15,6 +15,10 @@ select
   u.last_sign_in_at::date                           as last_seen,
   (u.email_confirmed_at is not null)                as confirmed,
   coalesce(s.status, 'free')                        as plan,
+  -- A user who only used the free tryout has ai_sessions_used = 0, so this
+  -- column alone makes them look inactive. ever_started is the honest signal.
+  (s.user_id is not null)                           as ever_started,
+  coalesce(s.trial_used, false)                     as used_free_tryout,
   coalesce(s.sessions_used_this_month, 0)           as ai_sessions_used,
   case when s.status = 'pro' then 60 else 2 end     as ai_session_limit,
   coalesce(g.graded_sessions, 0)                    as graded_sessions,
