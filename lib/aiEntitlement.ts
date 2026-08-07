@@ -1,7 +1,5 @@
 import { createAdminClient } from '@/lib/supabase/admin';
-
-const FREE_SESSION_LIMIT = 2;
-const PRO_SESSION_LIMIT  = 60;
+import { sessionLimitFor } from '@/lib/sessionLimits';
 
 // After a user consumes their final session, AI features (chat, grading) stay
 // available for this long so the in-flight session can finish normally. The
@@ -19,7 +17,7 @@ export async function hasAiEntitlement(userId: string): Promise<boolean> {
   const admin = createAdminClient();
   const { data: sub } = await admin
     .from('user_subscriptions')
-    .select('sessions_used_this_month, sessions_reset_at, status, updated_at, trial_used')
+    .select('sessions_used_this_month, sessions_reset_at, status, updated_at, trial_used, trial_used_at')
     .eq('user_id', userId)
     .single();
 
@@ -32,7 +30,7 @@ export async function hasAiEntitlement(userId: string): Promise<boolean> {
     resetAt.getMonth()    !== now.getMonth();
 
   const used  = isNewMonth ? 0 : (sub.sessions_used_this_month ?? 0);
-  const limit = sub.status === 'pro' ? PRO_SESSION_LIMIT : FREE_SESSION_LIMIT;
+  const limit = sessionLimitFor(sub.status, Boolean(sub.trial_used), sub.trial_used_at);
 
   // An unused tryout still entitles the user, even at quota.
   if (!sub.trial_used) return true;

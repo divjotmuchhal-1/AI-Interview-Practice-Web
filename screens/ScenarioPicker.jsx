@@ -10,6 +10,7 @@ function UserIcon() {
   );
 }
 import { TRACKS, SCENARIOS } from '@/data/scenarios';
+import { FREE_SESSION_LIMIT } from '@/lib/sessionLimits';
 
 const FREE_TRACK_LIMIT = 3;
 
@@ -289,7 +290,7 @@ function TierBanner({ tier, sessionsUsed, sessionLimit, isLocked, daysUntilReset
           {isLocked
             ? `AI sessions used · resets in ${daysUntilReset}d`
             : trialAvailable
-              ? `Free tryout ready · then ${sessionLimit}/month`
+              ? `Free tryout ready · then ${FREE_SESSION_LIMIT}/month`
               : `${remaining} of ${sessionLimit} AI sessions left`}
         </span>
         <div className="tier-bar-wrap">

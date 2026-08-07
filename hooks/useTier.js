@@ -1,9 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
 import { track } from '@/lib/track';
 
-export const FREE_SESSION_LIMIT = 2;
-export const FREE_TRACK_LIMIT   = 3;
-export const PRO_SESSION_LIMIT  = 60;
+export { FREE_SESSION_LIMIT, PRO_SESSION_LIMIT } from '@/lib/sessionLimits';
+import { FREE_SESSION_LIMIT } from '@/lib/sessionLimits';
+
+export const FREE_TRACK_LIMIT = 3;
 
 export function useTier() {
   const [sub, setSub] = useState({
