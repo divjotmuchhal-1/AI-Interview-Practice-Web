@@ -8,10 +8,18 @@
 -- The flag is per account and never resets: it is a one-time tryout, not a
 -- monthly allowance.
 
+-- Wrapped in a transaction: the function is dropped and recreated because its
+-- return type gains a column, and Postgres refuses that with CREATE OR REPLACE.
+-- Without the transaction there would be a brief window where starting a
+-- session fails because the function does not exist.
+begin;
+
 alter table user_subscriptions
   add column if not exists trial_used boolean not null default false;
 
-create or replace function consume_session(p_user_id uuid)
+drop function if exists consume_session(uuid);
+
+create function consume_session(p_user_id uuid)
 returns table (ok boolean, sessions_used int, session_limit int, was_trial boolean)
 language plpgsql
 security definer
@@ -76,3 +84,5 @@ end;
 $$;
 
 revoke all on function consume_session(uuid) from public, anon, authenticated;
+
+commit;
