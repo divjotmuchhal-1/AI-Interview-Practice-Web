@@ -22,6 +22,7 @@ export async function GET() {
       status:                   'free',
       sessions_used_this_month: 0,
       session_limit:            FREE_SESSION_LIMIT,
+      trial_available:          true,
     });
   }
 
@@ -45,5 +46,6 @@ export async function GET() {
     status:                   data.status,
     sessions_used_this_month: data.sessions_used_this_month,
     session_limit:            limit,
+    trial_available:          !data.trial_used,
   });
 }

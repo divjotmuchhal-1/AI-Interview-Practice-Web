@@ -239,6 +239,7 @@ function PracticePageInner() {
           scenario={pendingScenario}
           aiLocked={tier.isLocked}
           isFree={tier.tier === 'free'}
+          trialAvailable={tier.trialAvailable}
           sessionsLeft={Math.max(0, tier.sessionLimit - tier.sessionsUsed)}
           onCancel={() => setPendingScenario(null)}
           onStart={handleStartSession}
@@ -251,6 +252,7 @@ function PracticePageInner() {
         sessionLimit={tier.sessionLimit}
         isLocked={tier.isLocked}
         daysUntilReset={tier.daysUntilReset}
+        trialAvailable={tier.trialAvailable}
         onUpgrade={tier.upgradeToPro}
         onSubscription={() => setScreen('subscription')}
         onProfile={() => setScreen('profile')}

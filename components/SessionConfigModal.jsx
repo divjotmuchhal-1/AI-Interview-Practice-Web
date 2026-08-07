@@ -28,7 +28,8 @@ function OptionGroup({ title, children }) {
 }
 
 export default function SessionConfigModal({
-  scenario, aiLocked = false, sessionsLeft = null, isFree = false, onCancel, onStart,
+  scenario, aiLocked = false, sessionsLeft = null, isFree = false,
+  trialAvailable = false, onCancel, onStart,
 }) {
   const [practiceMode,    setPracticeMode]    = useState(false);
   const [hardMode,        setHardMode]        = useState(false);
@@ -66,7 +67,13 @@ export default function SessionConfigModal({
           {/* Free users otherwise see only "2 of 2 AI sessions left", which reads
               as a hard cap on using the product at all and encourages hoarding.
               Say plainly that practice itself is never limited. */}
-          {!aiLocked && isFree && sessionsLeft !== null && (
+          {!aiLocked && trialAvailable && (
+            <div className="scm-session-cost scm-session-cost--trial">
+              <strong>Free tryout session.</strong> This one is on us: it does not use
+              any of your {sessionsLeft ?? 2} monthly AI sessions.
+            </div>
+          )}
+          {!aiLocked && !trialAvailable && isFree && sessionsLeft !== null && (
             <div className="scm-session-cost">
               Uses 1 of your {sessionsLeft} AI-coached sessions this month.
               Practising without the AI coach is always unlimited.

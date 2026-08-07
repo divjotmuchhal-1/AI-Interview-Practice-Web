@@ -19,7 +19,7 @@ export async function hasAiEntitlement(userId: string): Promise<boolean> {
   const admin = createAdminClient();
   const { data: sub } = await admin
     .from('user_subscriptions')
-    .select('sessions_used_this_month, sessions_reset_at, status, updated_at')
+    .select('sessions_used_this_month, sessions_reset_at, status, updated_at, trial_used')
     .eq('user_id', userId)
     .single();
 
@@ -34,6 +34,8 @@ export async function hasAiEntitlement(userId: string): Promise<boolean> {
   const used  = isNewMonth ? 0 : (sub.sessions_used_this_month ?? 0);
   const limit = sub.status === 'pro' ? PRO_SESSION_LIMIT : FREE_SESSION_LIMIT;
 
+  // An unused tryout still entitles the user, even at quota.
+  if (!sub.trial_used) return true;
   if (used < limit) return true;
 
   const lastConsume = sub.updated_at ? new Date(sub.updated_at).getTime() : 0;

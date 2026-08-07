@@ -1252,3 +1252,11 @@
   line-height: 1.6;
   color: var(--text-muted);
 }
+
+/* The tryout note should read as a gift, not a warning. */
+.scm-session-cost--trial {
+  background: var(--accent-dim);
+  border-color: rgba(232, 119, 74, 0.4);
+  color: var(--text);
+}
+.scm-session-cost--trial strong { color: var(--accent); }

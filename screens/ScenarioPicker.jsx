@@ -256,7 +256,7 @@ function StatsRow({ stats }) {
 
 // ── Tier banner ───────────────────────────────────────────────────────────────
 
-function TierBanner({ tier, sessionsUsed, sessionLimit, isLocked, daysUntilReset, onUpgrade }) {
+function TierBanner({ tier, sessionsUsed, sessionLimit, isLocked, daysUntilReset, onUpgrade, trialAvailable = false }) {
   if (tier === 'pro') {
     const remaining = Math.max(0, sessionLimit - sessionsUsed);
     const pctLeft = (remaining / sessionLimit) * 100;
@@ -288,7 +288,9 @@ function TierBanner({ tier, sessionsUsed, sessionLimit, isLocked, daysUntilReset
         <span className="tier-text">
           {isLocked
             ? `AI sessions used · resets in ${daysUntilReset}d`
-            : `${remaining} of ${sessionLimit} AI sessions left`}
+            : trialAvailable
+              ? `Free tryout session ready · then ${sessionLimit} AI sessions/month`
+              : `${remaining} of ${sessionLimit} AI sessions left`}
         </span>
         <div className="tier-bar-wrap">
           <div className={`tier-bar ${isLocked ? 'tier-bar--full' : ''}`} style={{ width: `${pct}%` }} />
@@ -576,6 +578,7 @@ export default function ScenarioPicker({
   sessionLimit,
   isLocked,
   daysUntilReset,
+  trialAvailable,
   onUpgrade,
   onSubscription,
   onSignOut,
@@ -668,6 +671,7 @@ export default function ScenarioPicker({
                 isLocked={isLocked}
                 daysUntilReset={daysUntilReset}
                 onUpgrade={onUpgrade}
+                trialAvailable={trialAvailable}
               />
               <div className="picker-user-menu">
                 {onSubscription && (

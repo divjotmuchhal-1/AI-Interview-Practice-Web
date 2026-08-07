@@ -10,6 +10,7 @@ export function useTier() {
     status:                   'free',
     sessions_used_this_month: 0,
     session_limit:            FREE_SESSION_LIMIT,
+    trial_available:          false,
   });
   const [loading, setLoading] = useState(true);
 
@@ -26,7 +27,9 @@ export function useTier() {
   const tier         = sub.status === 'pro' ? 'pro' : 'free';
   const sessionsUsed = sub.sessions_used_this_month ?? 0;
   const sessionLimit = sub.session_limit ?? FREE_SESSION_LIMIT;
-  const isLocked     = sessionsUsed >= sessionLimit;
+  const trialAvailable = Boolean(sub.trial_available);
+  // A pending tryout keeps AI available regardless of quota.
+  const isLocked     = !trialAvailable && sessionsUsed >= sessionLimit;
 
   const daysUntilReset = (() => {
     const now  = new Date();
@@ -72,6 +75,7 @@ export function useTier() {
     tier,
     sessionsUsed,
     sessionLimit,
+    trialAvailable,
     isLocked,
     loading,
     daysUntilReset,
