@@ -2,15 +2,26 @@
 -- Run this once in the Supabase dashboard: SQL Editor -> New query -> paste -> Run.
 -- Then use the example queries at the bottom of this file.
 --
+-- Creates two views over public.sessions:
+--
+--   sessions_by_email  every column of the sessions table, unchanged and in the
+--                      same order, but with email as the first column instead
+--                      of user_id. Use this when you want to browse raw rows.
+--
+--   session_history    the same data trimmed down, with the overall score,
+--                      duration in minutes, and a dead-session flag worked out
+--                      for you. Use this for scanning and for the queries at
+--                      the bottom of this file.
+--
 -- IMPORTANT: a row lands in public.sessions only when the user clicks "End
 -- Session" and the grader returns. Someone who starts a scenario and closes the
--- tab leaves NO row here. So this view answers "what did people finish", not
+-- tab leaves NO row here. So these views answer "what did people finish", not
 -- "what did people try". For the second question use the started_not_finished
 -- query at the bottom, which reads user_subscriptions instead.
 --
--- SECURITY: exposes emails and full session transcripts, so access is revoked
--- from anon and authenticated. Only the service role and the SQL editor (which
--- runs as postgres) can read it. Never grant it to anon.
+-- SECURITY: these expose emails and full session transcripts, so access is
+-- revoked from anon and authenticated. Only the service role and the SQL editor
+-- (which runs as postgres) can read them. Never grant them to anon.
 --
 -- Note on RLS: public.sessions has a policy restricting rows to auth.uid().
 -- That policy does not apply here, because the SQL editor runs as the table
@@ -19,6 +30,65 @@
 -- most common reason a "why is this empty" query looks broken.
 
 begin;
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- sessions_by_email: your sessions table, with email as the first column
+-- instead of user_id. Every other column is unchanged and in the original
+-- order, so anything you would run against public.sessions works here.
+--
+-- Why a view and not an email column on the table: email lives in auth.users.
+-- Copying it into sessions would go stale the moment someone changes it, and
+-- would duplicate personal data into a second table for no benefit. A view
+-- reads the live value on every query and stores nothing.
+--
+-- Browse it in the dashboard under Table Editor, in the views section.
+-- ─────────────────────────────────────────────────────────────────────────────
+
+drop view if exists sessions_by_email;
+
+create view sessions_by_email as
+select
+  u.email,
+  s.id,
+  s.scenario_id,
+  s.scenario_title,
+  s.scenario_company,
+  s.scenario_difficulty,
+  s.completed_at,
+  s.duration_ms,
+  s.prompt_count,
+  s.test_run_count,
+  s.code_edit_count,
+  s.rubber_stamp_rate,
+  s.recovery_rate,
+  s.acted_before_asked,
+  s.tested_before_asked,
+  s.score_diagnosis,
+  s.score_independence,
+  s.score_precision,
+  s.score_verification,
+  s.score_recovery,
+  s.score_test_ownership,
+  s.headline,
+  s.strengths,
+  s.watchouts,
+  s.evidence,
+  s.events,
+  -- Kept last rather than dropped, so joins back to auth.users still work.
+  s.user_id
+from public.sessions s
+join auth.users u on u.id = s.user_id
+order by s.completed_at desc;
+
+revoke all on sessions_by_email from anon, authenticated, public;
+grant select on sessions_by_email to service_role;
+
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- session_history: the same data, trimmed and with the numbers worked out
+-- (overall score, minutes, dead-session flag). Better for scanning and for the
+-- example queries below.
+-- ─────────────────────────────────────────────────────────────────────────────
 
 drop view if exists session_history;
 
