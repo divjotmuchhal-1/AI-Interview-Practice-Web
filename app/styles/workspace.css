@@ -108,6 +108,11 @@
   gap: 8px;
 }
 
+/* Ending the session is what grades and saves it: a user who never presses
+   this leaves no record and gets no feedback. At 11px in a crowded top bar it
+   reads as just another control, so a slow pulse gives it presence. Kept to a
+   soft outer glow rather than a colour or size change, so the button does not
+   compete with the accent elsewhere in the bar. */
 .topbar-end-btn {
   font-size: 11px;
   font-weight: 600;
@@ -119,11 +124,29 @@
   color: var(--accent);
   cursor: pointer;
   white-space: nowrap;
-  transition: background 0.15s, border-color 0.15s;
+  transition: background 0.15s, border-color 0.15s, box-shadow 0.15s;
+  animation: endBtnGlow 2.6s ease-in-out infinite;
 }
+/* Hover settles the pulse to a steady glow, so the button feels responsive to
+   the pointer instead of continuing to animate underneath it. */
 .topbar-end-btn:hover {
   background: rgba(232, 119, 74, 0.16);
   border-color: var(--accent);
+  animation: none;
+  box-shadow: 0 0 12px 1px rgba(232, 119, 74, 0.5);
+}
+
+@keyframes endBtnGlow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(232, 119, 74, 0); }
+  50%      { box-shadow: 0 0 10px 1px rgba(232, 119, 74, 0.45); }
+}
+
+/* Reduced motion still gets the emphasis, just without the movement. */
+@media (prefers-reduced-motion: reduce) {
+  .topbar-end-btn {
+    animation: none;
+    box-shadow: 0 0 8px 0 rgba(232, 119, 74, 0.3);
+  }
 }
 
 .topbar-events-btn {
