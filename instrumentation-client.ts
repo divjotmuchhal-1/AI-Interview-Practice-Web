@@ -20,6 +20,20 @@ Sentry.init({
 
   // Do not attach request bodies or cookies to events.
   sendDefaultPii: false,
+
+  ignoreErrors: [
+    // Next.js speculatively prefetches every <Link> that enters the viewport,
+    // then aborts those requests when the router cancels them or the user
+    // navigates away. The abort rejects and escapes to
+    // window.onunhandledrejection, so Sentry records it as an unhandled error
+    // even though nothing failed: a cancelled prefetch has no user impact.
+    // The landing page alone has eight links to /login, so unfiltered this
+    // would be constant noise against a 5k events/month quota.
+    //
+    // Safe to filter wholesale because the app never calls AbortController or
+    // .abort() itself. If that ever changes, narrow this.
+    'signal is aborted without reason',
+  ],
 });
 
 // Lets Sentry tie a slow or failed navigation to the route the user was moving
