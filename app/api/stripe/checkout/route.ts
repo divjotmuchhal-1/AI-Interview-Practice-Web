@@ -75,8 +75,30 @@ export async function POST() {
 
     return NextResponse.json({ url: session.url });
   } catch (err) {
+    // Log Stripe's own type/code alongside the message. A bare message made a
+    // price/mode mismatch — the most likely misconfiguration here — look
+    // identical to a network failure in the logs.
+    const e = err as Stripe.errors.StripeError;
+    console.error('checkout failed:', {
+      type:    e?.type,
+      code:    e?.code,
+      param:   e?.param,
+      message: e?.message ?? String(err),
+      priceId: process.env.STRIPE_PRICE_ID,
+      mode:    'payment',
+    });
+
+    // A price whose recurring/one-time type does not match the session mode is
+    // a deployment mistake, not a user error, so name it distinctly rather than
+    // letting it hide behind the generic failure.
+    const mismatched =
+      e?.type === 'StripeInvalidRequestError' &&
+      /recurring|one[- ]time|mode/i.test(e?.message ?? '');
+
     // Always return JSON: an empty 500 body makes the client fail on res.json().
-    console.error('checkout failed:', err instanceof Error ? err.message : err);
-    return NextResponse.json({ error: 'checkout_failed' }, { status: 500 });
+    return NextResponse.json(
+      { error: mismatched ? 'price_mode_mismatch' : 'checkout_failed' },
+      { status: 500 },
+    );
   }
 }
