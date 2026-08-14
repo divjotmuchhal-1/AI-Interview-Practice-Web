@@ -12,6 +12,8 @@ export function useTier() {
     sessions_used_this_month: 0,
     session_limit:            FREE_SESSION_LIMIT,
     trial_available:          false,
+    credits_remaining:        0,
+    credits_expire_at:        null,
   });
   const [loading, setLoading] = useState(true);
 
@@ -29,8 +31,11 @@ export function useTier() {
   const sessionsUsed = sub.sessions_used_this_month ?? 0;
   const sessionLimit = sub.session_limit ?? FREE_SESSION_LIMIT;
   const trialAvailable = Boolean(sub.trial_available);
-  // A pending tryout keeps AI available regardless of quota.
-  const isLocked     = !trialAvailable && sessionsUsed >= sessionLimit;
+  const credits        = sub.credits_remaining ?? 0;
+  const creditsExpireAt = sub.credits_expire_at ?? null;
+  // A pending tryout, or purchased credits, keeps AI available regardless of
+  // how much of the free monthly allowance has been spent.
+  const isLocked     = !trialAvailable && sessionsUsed >= sessionLimit && credits <= 0;
 
   const daysUntilReset = (() => {
     const now  = new Date();
@@ -39,7 +44,15 @@ export function useTier() {
   })();
 
   const consumeSession = useCallback(() => {
-    setSub(prev => ({ ...prev, sessions_used_this_month: prev.sessions_used_this_month + 1 }));
+    // Optimistic update mirroring supabase/credits.sql: spend the free monthly
+    // allowance first, and only then a purchased credit.
+    setSub(prev => {
+      const limit = prev.session_limit ?? FREE_SESSION_LIMIT;
+      const used  = prev.sessions_used_this_month ?? 0;
+      return used < limit
+        ? { ...prev, sessions_used_this_month: used + 1 }
+        : { ...prev, credits_remaining: Math.max(0, (prev.credits_remaining ?? 0) - 1) };
+    });
     fetch('/api/subscription/consume', { method: 'POST' })
       .then(r => { if (!r.ok) fetchSub(); }) // rejected: re-sync with server truth
       .catch(() => {});
@@ -77,6 +90,8 @@ export function useTier() {
     sessionsUsed,
     sessionLimit,
     trialAvailable,
+    credits,
+    creditsExpireAt,
     isLocked,
     loading,
     daysUntilReset,

@@ -29,7 +29,7 @@ function OptionGroup({ title, children }) {
 
 export default function SessionConfigModal({
   scenario, aiLocked = false, sessionsLeft = null, isFree = false,
-  trialAvailable = false, onCancel, onStart,
+  trialAvailable = false, credits = 0, onCancel, onStart,
 }) {
   const [practiceMode,    setPracticeMode]    = useState(false);
   const [hardMode,        setHardMode]        = useState(false);
@@ -73,9 +73,18 @@ export default function SessionConfigModal({
               any of your monthly AI sessions.
             </div>
           )}
-          {!aiLocked && !trialAvailable && isFree && sessionsLeft !== null && (
+          {/* Free allowance is spent before purchased credits, so say which one
+              this session will actually draw from. */}
+          {!aiLocked && !trialAvailable && isFree && sessionsLeft !== null && sessionsLeft > 0 && (
             <div className="scm-session-cost">
-              Uses 1 of your {sessionsLeft} AI-coached sessions this month.
+              Uses 1 of your {sessionsLeft} free sessions this month
+              {credits > 0 ? `, before touching your ${credits} pack sessions` : ''}.
+              Practising without the AI coach is always unlimited.
+            </div>
+          )}
+          {!aiLocked && !trialAvailable && isFree && sessionsLeft === 0 && credits > 0 && (
+            <div className="scm-session-cost">
+              Uses 1 of your {credits} pack session{credits === 1 ? '' : 's'}.
               Practising without the AI coach is always unlimited.
             </div>
           )}

@@ -1,6 +1,7 @@
 'use client';
 import { useEffect } from 'react';
 import Link from 'next/link';
+import { FREE_SESSION_LIMIT, PACK_SESSIONS, PACK_VALID_DAYS, PACK_PRICE_USD } from '@/lib/sessionLimits';
 
 // ── Inline SVG icons ─────────────────────────────────────────────────────────
 function IconCode() {
@@ -343,7 +344,7 @@ export default function LandingPage() {
               <div className="lp-price-amount">$0<span className="lp-price-period">/month</span></div>
               <p className="lp-price-note">No credit card required</p>
               <ul className="lp-price-list">
-                <li>2 AI-coached sessions per month</li>
+                <li>{FREE_SESSION_LIMIT} AI-coached sessions per month, plus a free first session</li>
                 <li>Unlimited practice sessions without AI</li>
                 <li>3 practice tracks</li>
                 <li>Full editor, tests, and answer keys</li>
@@ -353,16 +354,16 @@ export default function LandingPage() {
 
             <div className="lp-price-card lp-price-card--pro" data-reveal data-delay="90">
               <div className="lp-price-badge">Most popular</div>
-              <div className="lp-price-name">Pro</div>
-              <div className="lp-price-amount">$9<span className="lp-price-period">/month</span></div>
-              <p className="lp-price-note">Cancel anytime</p>
+              <div className="lp-price-name">Session Pack</div>
+              <div className="lp-price-amount">${PACK_PRICE_USD}<span className="lp-price-period">one time</span></div>
+              <p className="lp-price-note">Not a subscription</p>
               <ul className="lp-price-list">
-                <li>60 AI-coached sessions per month</li>
+                <li>{PACK_SESSIONS} AI-coached sessions, valid {PACK_VALID_DAYS} days</li>
                 <li>All 7 tracks, 36 scenarios</li>
                 <li>AI performance grading on every session</li>
                 <li>Full session history and progress tracking</li>
               </ul>
-              <Link href="/login" className="lp-price-btn lp-price-btn--pro">Get Pro →</Link>
+              <Link href="/login" className="lp-price-btn lp-price-btn--pro">Get {PACK_SESSIONS} sessions →</Link>
             </div>
           </div>
         </div>

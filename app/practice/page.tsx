@@ -157,6 +157,8 @@ function PracticePageInner() {
         tier={tier.tier}
         sessionsUsed={tier.sessionsUsed}
         sessionLimit={tier.sessionLimit}
+        credits={tier.credits}
+        creditsExpireAt={tier.creditsExpireAt}
         daysUntilReset={tier.daysUntilReset}
         onUpgrade={tier.upgradeToPro}
         onManageSub={tier.manageSub}
@@ -259,6 +261,7 @@ function PracticePageInner() {
           isFree={tier.tier === 'free'}
           trialAvailable={tier.trialAvailable}
           sessionsLeft={Math.max(0, tier.sessionLimit - tier.sessionsUsed)}
+          credits={tier.credits}
           onCancel={() => setPendingScenario(null)}
           onStart={handleStartSession}
         />
@@ -269,6 +272,7 @@ function PracticePageInner() {
         sessionsUsed={tier.sessionsUsed}
         sessionLimit={tier.sessionLimit}
         isLocked={tier.isLocked}
+        credits={tier.credits}
         daysUntilReset={tier.daysUntilReset}
         trialAvailable={tier.trialAvailable}
         onUpgrade={tier.upgradeToPro}

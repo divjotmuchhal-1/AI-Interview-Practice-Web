@@ -1,17 +1,22 @@
 'use client';
 
+import { FREE_SESSION_LIMIT, PACK_SESSIONS, PACK_VALID_DAYS, PACK_PRICE_USD } from '@/lib/sessionLimits';
+
 const FREE_FEATURES = [
-  '2 AI-coached sessions per month',
+  `${FREE_SESSION_LIMIT} AI-coached sessions per month, plus a free first session`,
   'First 3 tracks: Python, JavaScript, TypeScript',
   'AI chat coaching during sessions',
   'Full session review with radar chart & scoring',
   'Session history',
 ];
 
-const PRO_EXTRA = [
-  '100 AI-coached sessions per month',
+// Counts are derived from lib/sessionLimits so the page can never promise a
+// number the database does not enforce.
+const PACK_EXTRA = [
+  `${PACK_SESSIONS} AI-coached sessions, valid ${PACK_VALID_DAYS} days`,
   'All 7 tracks: SQL, React, Code Review & Large Codebase unlocked',
-  'Priority support',
+  'Sessions roll over — no monthly reset, nothing expires early',
+  'One payment. No subscription, nothing to cancel.',
 ];
 
 function CheckIcon({ color = 'var(--green)' }) {
@@ -23,8 +28,17 @@ function CheckIcon({ color = 'var(--green)' }) {
   );
 }
 
-export default function SubscriptionScreen({ tier, sessionsUsed, sessionLimit, daysUntilReset, onUpgrade, onManageSub, onBack }) {
+export default function SubscriptionScreen({
+  tier, sessionsUsed, sessionLimit, daysUntilReset,
+  credits = 0, creditsExpireAt = null,
+  onUpgrade, onManageSub, onBack,
+}) {
+  // 'pro' is the legacy monthly subscription. No new ones are sold.
   const isPro = tier === 'pro';
+  const hasCredits = credits > 0;
+  const expiryLabel = creditsExpireAt
+    ? new Date(creditsExpireAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })
+    : null;
 
   return (
     <div className="sub-root">
@@ -37,6 +51,14 @@ export default function SubscriptionScreen({ tier, sessionsUsed, sessionLimit, d
         <p className="sub-current-label">
           You are currently on the <span className={`sub-tier-chip sub-tier-chip--${isPro ? 'pro' : 'free'}`}>{isPro ? 'Pro' : 'Free'}</span> plan
         </p>
+
+        {hasCredits && (
+          <p className="sub-credits-note">
+            <strong>{credits} session{credits === 1 ? '' : 's'} remaining</strong> from your pack
+            {expiryLabel ? `, valid until ${expiryLabel}` : ''}. Your free monthly sessions
+            are used first, so these last as long as possible.
+          </p>
+        )}
 
         {!isPro && (
           <div className="sub-usage-bar-wrap">
@@ -75,15 +97,15 @@ export default function SubscriptionScreen({ tier, sessionsUsed, sessionLimit, d
           </div>
 
           {/* Pro card */}
-          <div className={`sub-card sub-card--pro ${isPro ? 'sub-card--active' : ''}`}>
+          <div className={`sub-card sub-card--pro ${isPro || hasCredits ? 'sub-card--active' : ''}`}>
             <div className="sub-card-header">
-              <span className="sub-card-name">Pro</span>
-              <span className="sub-card-price">$9<span className="sub-card-period">/month</span></span>
-              {isPro && <span className="sub-current-badge sub-current-badge--pro">Current plan</span>}
+              <span className="sub-card-name">Session Pack</span>
+              <span className="sub-card-price">${PACK_PRICE_USD}<span className="sub-card-period">one time</span></span>
+              {hasCredits && <span className="sub-current-badge sub-current-badge--pro">{credits} left</span>}
             </div>
             <p className="sub-card-includes">Everything in Free, plus:</p>
             <ul className="sub-feature-list">
-              {PRO_EXTRA.map(f => (
+              {PACK_EXTRA.map(f => (
                 <li key={f} className="sub-feature-item">
                   <CheckIcon color="var(--green)" />
                   <span>{f}</span>
@@ -98,11 +120,12 @@ export default function SubscriptionScreen({ tier, sessionsUsed, sessionLimit, d
             ) : (
               <>
                 <button className="sub-upgrade-btn" onClick={onUpgrade}>
-                  Upgrade to Pro →
+                  {hasCredits ? `Buy ${PACK_SESSIONS} more →` : `Get ${PACK_SESSIONS} sessions →`}
                 </button>
                 <p className="sub-legal-note">
-                  Renews monthly, cancel anytime. Payments are non-refundable. By upgrading
-                  you agree to the{' '}
+                  A single payment, not a subscription. Sessions are valid for{' '}
+                  {PACK_VALID_DAYS} days and payments are non-refundable. Buying again adds
+                  to your balance. By purchasing you agree to the{' '}
                   <a href="/terms" target="_blank" rel="noopener noreferrer">Terms</a> and{' '}
                   <a href="/privacy" target="_blank" rel="noopener noreferrer">Privacy Policy</a>{' '}
                   and consent to immediate access to the service.

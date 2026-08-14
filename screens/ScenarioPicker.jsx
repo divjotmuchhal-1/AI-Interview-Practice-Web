@@ -10,7 +10,7 @@ function UserIcon() {
   );
 }
 import { TRACKS, SCENARIOS } from '@/data/scenarios';
-import { FREE_SESSION_LIMIT } from '@/lib/sessionLimits';
+import { FREE_SESSION_LIMIT, PACK_SESSIONS, PACK_PRICE_USD } from '@/lib/sessionLimits';
 
 const FREE_TRACK_LIMIT = 3;
 
@@ -257,7 +257,7 @@ function StatsRow({ stats }) {
 
 // ── Tier banner ───────────────────────────────────────────────────────────────
 
-function TierBanner({ tier, sessionsUsed, sessionLimit, isLocked, daysUntilReset, onUpgrade, trialAvailable = false }) {
+function TierBanner({ tier, sessionsUsed, sessionLimit, isLocked, daysUntilReset, onUpgrade, trialAvailable = false, credits = 0 }) {
   if (tier === 'pro') {
     const remaining = Math.max(0, sessionLimit - sessionsUsed);
     const pctLeft = (remaining / sessionLimit) * 100;
@@ -282,13 +282,31 @@ function TierBanner({ tier, sessionsUsed, sessionLimit, isLocked, daysUntilReset
   const remaining = Math.max(0, sessionLimit - sessionsUsed);
   const pct = (sessionsUsed / sessionLimit) * 100;
 
+  // Purchased credits are spent only after the free allowance runs out, so once
+  // someone holds a pack the free counter stops being the useful number.
+  if (credits > 0) {
+    return (
+      <div className="tier-banner tier-banner--free">
+        <span className="tier-badge tier-badge--free">Pack</span>
+        <div className="tier-usage">
+          <span className="tier-text">
+            {remaining > 0
+              ? `${remaining} free + ${credits} pack sessions left`
+              : `${credits} pack session${credits === 1 ? '' : 's'} left`}
+          </span>
+        </div>
+        <button className="tier-upgrade-btn" onClick={onUpgrade}>Top up →</button>
+      </div>
+    );
+  }
+
   return (
     <div className={`tier-banner ${isLocked ? 'tier-banner--locked' : 'tier-banner--free'}`}>
       <span className="tier-badge tier-badge--free">Free</span>
       <div className="tier-usage">
         <span className="tier-text">
           {isLocked
-            ? `AI sessions used · resets in ${daysUntilReset}d`
+            ? `Free sessions used · resets in ${daysUntilReset}d`
             : trialAvailable
               ? `Free tryout ready · then ${FREE_SESSION_LIMIT}/month`
               : `${remaining} of ${sessionLimit} AI sessions left`}
@@ -297,7 +315,7 @@ function TierBanner({ tier, sessionsUsed, sessionLimit, isLocked, daysUntilReset
           <div className={`tier-bar ${isLocked ? 'tier-bar--full' : ''}`} style={{ width: `${pct}%` }} />
         </div>
       </div>
-      <button className="tier-upgrade-btn" onClick={onUpgrade}>Upgrade →</button>
+      <button className="tier-upgrade-btn" onClick={onUpgrade}>{`Get ${PACK_SESSIONS} →`}</button>
     </div>
   );
 }
@@ -413,7 +431,7 @@ function TrackSection({ track, onSelect, isLocked, tierLocked, isOpen, onToggle,
           {tierLocked && (
             <div className="track-tier-gate">
               <p className="track-tier-gate-msg">This track is available on the Pro plan.</p>
-              <button className="track-tier-gate-btn" onClick={onUpgrade}>Upgrade to Pro →</button>
+              <button className="track-tier-gate-btn" onClick={onUpgrade}>{`Unlock all tracks — $${PACK_PRICE_USD}`}</button>
             </div>
           )}
           <div className={`track-grid ${tierLocked ? 'track-grid--blurred' : ''}`}>
@@ -580,6 +598,7 @@ export default function ScenarioPicker({
   isLocked,
   daysUntilReset,
   trialAvailable,
+  credits = 0,
   onUpgrade,
   onSubscription,
   onSignOut,
@@ -673,6 +692,7 @@ export default function ScenarioPicker({
                 daysUntilReset={daysUntilReset}
                 onUpgrade={onUpgrade}
                 trialAvailable={trialAvailable}
+                credits={credits}
               />
               <div className="picker-user-menu">
                 {onSubscription && (

@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import RadarChart from '@/components/RadarChart';
 import { computeMetrics, buildGradingPrompt, buildCodeReviewGradingPrompt, redactLeakedAnswer } from '@/utils/scoring';
+import { PACK_SESSIONS, PACK_PRICE_USD } from '@/lib/sessionLimits';
 
 function fmtMs(ms) {
   if (ms === null || ms === undefined) return '–';
@@ -196,7 +197,7 @@ export default function ReviewScreen({ events, scenario, onBack, preloadedGrade 
               </p>
               {onUpgrade && (
                 <button className="rv-ai-locked-btn" onClick={onUpgrade}>
-                  Upgrade to Pro for 60 AI sessions/month →
+                  Get {PACK_SESSIONS} AI sessions for ${PACK_PRICE_USD} →
                 </button>
               )}
             </div>

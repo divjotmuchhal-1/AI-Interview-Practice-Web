@@ -33,11 +33,11 @@ export async function POST() {
     }
 
     if (customerId) {
-      // Guard against duplicate subscriptions: checkout would happily create a
-      // second one on the same customer and bill for both. Stripe is queried
-      // directly rather than trusting our status column, which can lag if a
-      // webhook was missed. An already-subscribed user is sent to the billing
-      // portal to manage what they have.
+      // Legacy monthly subscribers still need somewhere to manage or cancel.
+      // Packs are one-time, so repeat purchases are fine and deliberately not
+      // blocked: buying again tops up the balance. Stripe is queried directly
+      // rather than trusting our status column, which can lag if a webhook was
+      // missed.
       const existing = await stripe.subscriptions.list({
         customer: customerId,
         status: 'active',
@@ -58,12 +58,18 @@ export async function POST() {
         .upsert({ user_id: user.id, stripe_customer_id: customerId });
     }
 
+    // One-time payment, not a subscription. Recurring charges on Indian-issued
+    // cards need an RBI e-mandate, and issuers generally will not grant one in a
+    // foreign currency, so a subscription is declined for most of our audience.
+    // A single charge clears normal 3-D Secure and works.
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
-      mode: 'subscription',
+      mode: 'payment',
       line_items: [{ price: process.env.STRIPE_PRICE_ID!, quantity: 1 }],
       success_url: `${process.env.NEXT_PUBLIC_APP_URL}/practice?upgraded=true`,
       cancel_url:  `${process.env.NEXT_PUBLIC_APP_URL}/practice`,
+      // Read back by the webhook to know which account to credit. Session
+      // metadata is the only link between the Stripe session and our user.
       metadata: { user_id: user.id },
     });
 

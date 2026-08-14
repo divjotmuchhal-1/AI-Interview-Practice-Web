@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
-import { FREE_SESSION_LIMIT, sessionLimitFor } from '@/lib/sessionLimits';
+import { FREE_SESSION_LIMIT, sessionLimitFor, usableCredits } from '@/lib/sessionLimits';
 
 export async function GET() {
   const supabase = await createClient();
@@ -21,6 +21,8 @@ export async function GET() {
       sessions_used_this_month: 0,
       session_limit:            FREE_SESSION_LIMIT + 1,
       trial_available:          true,
+      credits_remaining:        0,
+      credits_expire_at:        null,
     });
   }
 
@@ -45,5 +47,9 @@ export async function GET() {
     sessions_used_this_month: data.sessions_used_this_month,
     session_limit:            limit,
     trial_available:          !data.trial_used,
+    // Only usable credits are reported: expired ones stay in the table for
+    // auditing but must never be shown as spendable.
+    credits_remaining:        usableCredits(data.credits_remaining, data.credits_expire_at),
+    credits_expire_at:        data.credits_expire_at ?? null,
   });
 }

@@ -224,3 +224,18 @@
   .sub-cards { grid-template-columns: 1fr; }
   .sub-body  { padding: 32px 16px; }
 }
+
+
+/* Shown when the user holds a purchased pack. Sits above the plan cards so the
+   remaining balance is the first thing they see on this screen. */
+.sub-credits-note {
+  margin: 0 0 20px;
+  padding: 12px 14px;
+  border: 1px solid rgba(92, 184, 126, 0.28);
+  border-radius: var(--radius);
+  background: var(--green-dim);
+  color: var(--text);
+  font-size: 13px;
+  line-height: 1.5;
+}
+.sub-credits-note strong { color: var(--text-heading); }

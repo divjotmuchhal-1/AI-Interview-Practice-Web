@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react';
 import ReactMarkdown from 'react-markdown';
+import { PACK_SESSIONS, PACK_PRICE_USD } from '@/lib/sessionLimits';
 
 const MAX_PROMPTS = 15;
 const MAX_PAIRS   = 6;
@@ -352,7 +353,7 @@ export default function ChatPane({
               You've used all 3 free AI sessions this month.<br />
               Resets in <strong>{daysUntilReset} day{daysUntilReset !== 1 ? 's' : ''}</strong>.
             </p>
-            <button className="chat-upgrade-btn" onClick={onUpgrade}>Upgrade to Pro →</button>
+            <button className="chat-upgrade-btn" onClick={onUpgrade}>{`Get ${PACK_SESSIONS} more sessions →`}</button>
             <p className="chat-upgrade-note">Pro gives unlimited sessions, longer history, and priority responses.</p>
             <p className="chat-upgrade-note">You can still read the README, edit code, and run tests below.</p>
           </div>
