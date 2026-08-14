@@ -2,6 +2,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import { createClient } from '@/lib/supabase/server';
 import { checkRateLimit, checkDurableRateLimit, rateLimitResponse } from '@/lib/rateLimit';
 import { hasAiEntitlement, aiLockedResponse } from '@/lib/aiEntitlement';
+import { consumeAiCall, aiBudgetExhaustedResponse } from '@/lib/aiBudget';
 import { MAX_CHARS, readJsonCapped } from '@/lib/inputLimits';
 import { NextRequest } from 'next/server';
 
@@ -19,6 +20,9 @@ export async function POST(req: NextRequest) {
   // AI grading is a paid-session feature: spamming end-session while over the
   // limit must not burn API spend.
   if (!(await hasAiEntitlement(user.id))) return aiLockedResponse();
+
+  // Grading is AI spend and counts against the same budget as chat.
+  if (!(await consumeAiCall(user.id))) return aiBudgetExhaustedResponse();
 
   const parsed = await readJsonCapped<{ prompt?: unknown }>(req, MAX_CHARS.grade);
   if (!parsed.ok) return parsed.response;

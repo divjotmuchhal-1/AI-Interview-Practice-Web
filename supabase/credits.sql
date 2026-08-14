@@ -21,6 +21,16 @@ alter table user_subscriptions
 alter table user_subscriptions
   add column if not exists credits_expire_at timestamptz;
 
+-- AI spend is bounded per account, not just per session. Sessions cap how many
+-- times you can START, but nothing capped how much you could talk to the coach
+-- inside one, so a single $12 pack could run up far more than $12 of API cost.
+-- Every chat turn and every answer-key generation spends one call.
+alter table user_subscriptions
+  add column if not exists ai_calls_remaining int not null default 60;
+
+alter table user_subscriptions
+  add column if not exists ai_calls_reset_at timestamptz not null default now();
+
 -- Return type gains a column, so the function must be dropped rather than
 -- replaced. Wrapped in a transaction so there is no window where starting a
 -- session fails because consume_session does not exist.
@@ -171,6 +181,9 @@ begin
       credits_remaining, credits_expire_at, updated_at
     )
     values (p_user_id, 'free', 0, now(), p_credits, v_new_exp, now());
+    update user_subscriptions
+    set ai_calls_remaining = ai_calls_remaining + 250
+    where user_id = p_user_id;
     return query select p_credits, v_new_exp;
     return;
   end if;
@@ -182,9 +195,14 @@ begin
   end;
 
   update user_subscriptions
-  set credits_remaining = v_base + p_credits,
-      credits_expire_at = greatest(coalesce(v_row.credits_expire_at, v_new_exp), v_new_exp),
-      updated_at        = now()
+  set credits_remaining  = v_base + p_credits,
+      credits_expire_at  = greatest(coalesce(v_row.credits_expire_at, v_new_exp), v_new_exp),
+      -- A pack buys AI calls as well as sessions: chat turns, answer keys and
+      -- grading all draw from it. 250 across 25 sessions is 10 per session,
+      -- around the heaviest real session observed (11 prompts), and keeps the
+      -- worst-case cost of a pack below its price even with zero cache hits.
+      ai_calls_remaining = coalesce(v_row.ai_calls_remaining, 0) + 250,
+      updated_at         = now()
   where user_id = p_user_id;
 
   return query select
@@ -194,6 +212,62 @@ end;
 $$;
 
 revoke all on function grant_credits(uuid, int, int) from public, anon, authenticated;
+
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- consume_ai_call: the hard ceiling on API spend.
+--
+-- Called by /api/chat and /api/solution. Without it, holding a single unspent
+-- credit granted unlimited coach conversation for the life of the pack, bounded
+-- only by rate limits — which over a 90-day window is far more spend than the
+-- pack is worth. The free monthly allowance resets; purchased calls do not.
+-- ─────────────────────────────────────────────────────────────────────────────
+
+create or replace function consume_ai_call(p_user_id uuid)
+returns table (ok boolean, calls_left int)
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_row   user_subscriptions%rowtype;
+  v_calls int;
+begin
+  select * into v_row from user_subscriptions where user_id = p_user_id for update;
+
+  -- No row yet means no session has ever started. Let the request through; the
+  -- row is created by consume_session a moment later.
+  if not found then
+    return query select true, 60;
+    return;
+  end if;
+
+  -- Monthly reset of the free allotment. Purchased calls sit in the same
+  -- counter, so the reset only ever raises a depleted balance up to the free
+  -- floor and never claws purchased calls back.
+  if date_trunc('month', v_row.ai_calls_reset_at) <> date_trunc('month', now()) then
+    v_calls := greatest(coalesce(v_row.ai_calls_remaining, 0), 60);
+    update user_subscriptions
+    set ai_calls_remaining = v_calls, ai_calls_reset_at = now()
+    where user_id = p_user_id;
+  else
+    v_calls := coalesce(v_row.ai_calls_remaining, 0);
+  end if;
+
+  if v_calls <= 0 then
+    return query select false, 0;
+    return;
+  end if;
+
+  update user_subscriptions
+  set ai_calls_remaining = v_calls - 1, updated_at = now()
+  where user_id = p_user_id;
+
+  return query select true, v_calls - 1;
+end;
+$$;
+
+revoke all on function consume_ai_call(uuid) from public, anon, authenticated;
 
 
 -- ─────────────────────────────────────────────────────────────────────────────

@@ -24,6 +24,10 @@ const QUICK_ACTIONS_REVIEW = [
   { id: 'test',     label: 'How would you test it?', prompt: 'For one of the issues I found, how would you write a test or reproduce it to confirm it is real?' },
 ];
 
+// Returns [stablePrefix, volatileTail]. Prompt caching is a prefix match, so
+// anything that changes between turns has to sit AFTER the cached block or it
+// invalidates the whole thing. The candidate's findings change constantly; the
+// scenario, diff and rules do not.
 function buildCodeReviewSystemPrompt(scenario, part, fileContents, historySummary, hardMode) {
   const findings = fileContents['findings.md'] ?? '(nothing written yet)';
 
@@ -38,9 +42,6 @@ ${part.readme}
 === PR Diff ===
 ${part.diff}
 
-=== Candidate's Current Findings ===
-${findings}
-
 === Coaching Rules (follow strictly) ===
 1. NEVER reveal issues the candidate has not found yet. Ask probing questions instead.
 2. Guide with questions: "Have you thought about what happens if the token has no 'Bearer' prefix?" not "The Bearer check is missing."
@@ -53,13 +54,18 @@ ${findings}
     sys += `\n\n=== HARD MODE ===\nIn roughly 1 of every 3 responses, introduce ONE realistic bar-raiser challenge: "Is this actually exploitable in practice?", "How would you test for this?", or "What's the fix and does it introduce new issues?"`;
   }
 
+  let volatile = `=== Candidate's Current Findings ===\n${findings}`;
   if (historySummary) {
-    sys += `\n\n=== Earlier conversation (window trimmed) ===\n${historySummary}`;
+    volatile += `\n\n=== Earlier conversation (window trimmed) ===\n${historySummary}`;
   }
 
-  return sys;
+  return [sys, volatile];
 }
 
+// Returns [stablePrefix, volatileTail] — see the note on the code-review
+// builder. Here the live file contents and test results are what churn: they
+// changed on every keystroke and every test run, so the old single-block prompt
+// re-billed the entire scenario and rule set at full price on every turn.
 function buildSystemPrompt(scenario, part, partIndex, fileContents, testResults, historySummary, hardMode) {
   const allTests = testResults ? [...(testResults.visible || []), ...(testResults.hidden || [])] : [];
   const failing  = allTests.filter((t) => !t.passed);
@@ -71,29 +77,28 @@ Scenario: ${scenario.title} (${scenario.difficulty})
 Part ${partIndex + 1} of ${scenario.parts.length}: ${part.title}
 
 === Task (README) ===
-${part.readme}
+${part.readme}`;
 
-=== Current Code ===`;
-
+  let volatile = `=== Current Code ===`;
   for (const [name, code] of Object.entries(fileContents)) {
-    sys += `\n\n--- ${name} ---\n${code}`;
+    volatile += `\n\n--- ${name} ---\n${code}`;
   }
 
   if (testResults?.moduleError) {
-    sys += `\n\n=== Module Load Error ===\n${testResults.moduleError}`;
+    volatile += `\n\n=== Module Load Error ===\n${testResults.moduleError}`;
   } else if (failing.length > 0) {
-    sys += `\n\n=== Failing Tests (${failing.length} of ${allTests.length}) ===`;
+    volatile += `\n\n=== Failing Tests (${failing.length} of ${allTests.length}) ===`;
     for (const t of failing.slice(0, 6)) {
-      sys += `\n• "${t.description}"`;
-      if (t.error) { sys += `\n  error: ${t.error}`; }
-      else { sys += `\n  expected: ${JSON.stringify(t.expectedOutput)}\n  actual:   ${JSON.stringify(t.actual)}`; }
+      volatile += `\n• "${t.description}"`;
+      if (t.error) { volatile += `\n  error: ${t.error}`; }
+      else { volatile += `\n  expected: ${JSON.stringify(t.expectedOutput)}\n  actual:   ${JSON.stringify(t.actual)}`; }
     }
   } else if (testResults) {
-    sys += `\n\n=== All ${allTests.length} tests passing ===`;
+    volatile += `\n\n=== All ${allTests.length} tests passing ===`;
   }
 
   if (historySummary) {
-    sys += `\n\n=== Earlier conversation (window trimmed) ===\n${historySummary}`;
+    volatile += `\n\n=== Earlier conversation (window trimmed) ===\n${historySummary}`;
   }
 
   sys += `
@@ -122,7 +127,7 @@ In roughly 1 of every 3 responses, introduce ONE realistic interviewer distracti
 Never combine a distraction with a real hint in the same message.`;
   }
 
-  return sys;
+  return [sys, volatile];
 }
 
 function trimHistory(fullHistory, existingSummary) {
@@ -237,6 +242,7 @@ export default function ChatPane({
     const systemText = scenario.type === 'code-review'
       ? buildCodeReviewSystemPrompt(scenario, part, fileContents, updatedSummary, hardMode)
       : buildSystemPrompt(scenario, part, partIndex, fileContents, testResults, updatedSummary, hardMode);
+    const [stableText, volatileText] = systemText;
 
     try {
       const res = await fetch('/api/chat', {
@@ -245,7 +251,14 @@ export default function ChatPane({
         body: JSON.stringify({
           model:      'claude-sonnet-4-6',
           max_tokens: MAX_TOKENS,
-          system:     [{ type: 'text', text: systemText, cache_control: { type: 'ephemeral' } }],
+          // Two blocks, ordered stable-then-volatile. The breakpoint sits on
+          // the stable block so the scenario, README and rules are billed at
+          // cache-read rates after the first turn; only the live code and test
+          // output are re-billed in full.
+          system: [
+            { type: 'text', text: stableText, cache_control: { type: 'ephemeral' } },
+            { type: 'text', text: volatileText },
+          ],
           messages:   apiMessages,
         }),
       });

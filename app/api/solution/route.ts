@@ -1,6 +1,7 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { createClient } from '@/lib/supabase/server';
 import { checkRateLimit, checkDurableRateLimit, rateLimitResponse } from '@/lib/rateLimit';
+import { consumeAiCall, aiBudgetExhaustedResponse } from '@/lib/aiBudget';
 import { MAX_CHARS, readJsonCapped } from '@/lib/inputLimits';
 import { NextRequest } from 'next/server';
 
@@ -14,6 +15,10 @@ export async function POST(req: NextRequest) {
 
   const durable = await checkDurableRateLimit(user.id, 'solution');
   if (!durable.ok) return rateLimitResponse(durable.retryAfter!);
+
+  // Spend one AI call before reaching the provider, so a rejected request
+  // never costs anything.
+  if (!(await consumeAiCall(user.id))) return aiBudgetExhaustedResponse();
 
   const parsed = await readJsonCapped<{
     buggyCode?: unknown; readme?: unknown; partTitle?: unknown; language?: unknown;

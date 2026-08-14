@@ -12,7 +12,9 @@
 
 // ~4 characters per token, so 80k chars is roughly 20k input tokens.
 export const MAX_CHARS = {
-  chat:     80_000,
+  // Sized so that even a request at the cap, on a fully uncached prefix, keeps
+  // the worst-case cost of a session pack below what the pack sells for.
+  chat:     40_000,
   grade:    40_000,
   solution: 40_000,
 } as const;

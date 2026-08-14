@@ -2,6 +2,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import { createClient } from '@/lib/supabase/server';
 import { checkRateLimit, checkDurableRateLimit, rateLimitResponse } from '@/lib/rateLimit';
 import { hasAiEntitlement, aiLockedResponse } from '@/lib/aiEntitlement';
+import { consumeAiCall, aiBudgetExhaustedResponse } from '@/lib/aiBudget';
 import { MAX_CHARS, MAX_MESSAGES, readJsonCapped, promptSize, tooLargeResponse } from '@/lib/inputLimits';
 import { NextRequest } from 'next/server';
 
@@ -36,13 +37,20 @@ export async function POST(req: NextRequest) {
     return tooLargeResponse(MAX_CHARS.chat);
   }
 
+  // Spend one AI call. Placed after validation so a malformed request cannot
+  // burn the user's balance, and before the provider call so a rejected request
+  // never costs us anything.
+  if (!(await consumeAiCall(user.id))) return aiBudgetExhaustedResponse();
+
   const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
   // Model and token cap are pinned server-side: body values are untrusted and
   // letting the client choose would allow expensive models / huge outputs on our key.
   const stream = client.messages.stream({
     model:      'claude-sonnet-4-6',
-    max_tokens: Math.min(body.max_tokens ?? 1024, 2048),
+    // Coaching replies are one question or observation. Capping output here is
+    // the cheapest lever on per-turn cost: output bills at 5x input.
+    max_tokens: Math.min(body.max_tokens ?? 600, 600),
     system:     body.system as Anthropic.MessageCreateParams['system'],
     messages:   body.messages as Anthropic.MessageParam[],
   });
