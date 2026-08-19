@@ -3,7 +3,7 @@ import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
   title: 'Terms of Service · AI Interview Practice',
-  description: 'Terms of Service, billing, and refund policy for AI Interview Practice.',
+  description: 'Terms of Service, session packs, billing, and refund policy for AI Interview Practice.',
 };
 
 export default function TermsPage() {
@@ -45,42 +45,48 @@ export default function TermsPage() {
           Service. We may suspend or terminate accounts that violate these Terms.
         </p>
 
-        <h2>3. Plans, Billing, and Renewal</h2>
+        <h2>3. Plans, Billing, and Session Packs</h2>
         <p>
-          The Service offers a Free plan with monthly usage limits and a paid Pro
-          subscription. Pro is billed monthly in advance through our payment processor,
-          Stripe. Your subscription renews automatically each month until you cancel.
-          Prices may change; we will notify you before a price change takes effect on
-          your next billing cycle.
+          The Service offers a Free plan with monthly usage limits and a paid Session
+          Pack. A Session Pack is a <strong>one-time purchase, not a subscription</strong>.
+          There is nothing to cancel and nothing renews. Payment is taken once through our
+          payment processor, Stripe.
         </p>
         <p>
-          You can cancel at any time from the Manage Subscription page, which opens
-          Stripe&apos;s billing portal. Cancellation takes effect at the end of the current
-          billing period; you keep Pro access until then. Monthly usage limits (such as
-          AI session counts) reset each calendar month and unused sessions do not roll
-          over.
+          Each pack grants a fixed number of AI-coached sessions and an associated
+          allowance of AI coaching interactions, both valid for the period stated at
+          checkout. Unused sessions and interactions expire at the end of that period and
+          do not carry over. Buying another pack adds to your balance and extends the
+          expiry. Your free monthly allowance is spent before purchased sessions, so a
+          pack lasts as long as possible.
+        </p>
+        <p>
+          Free-plan monthly limits reset each calendar month and unused free sessions do
+          not roll over. Prices and pack contents may change; changes apply to future
+          purchases only and never to a pack you have already bought.
         </p>
 
         <h2>4. Refunds</h2>
         <p>
-          All payments are final and non-refundable. The Free plan exists so you can
-          fully evaluate the Service before paying: Pro purchases are a commitment to
-          the current billing period. You can cancel at any time to stop future charges
-          and keep access until the end of the period already paid for.
+          Session Packs are digital goods delivered immediately, and payments are final
+          and non-refundable except as set out below. The Free plan, including a free
+          first session, exists so you can fully evaluate the Service before paying.
         </p>
         <p>
-          By subscribing, you expressly consent to the Service being available to you
-          immediately upon payment and acknowledge that, where permitted by law, this
-          waives any statutory withdrawal or cooling-off right that would otherwise
-          apply to the period in which the service has been supplied. Nothing in this
-          section limits non-waivable statutory rights in your jurisdiction.
+          By purchasing, you expressly request immediate delivery and consent to the
+          Service being available to you at once, and acknowledge that, where permitted by
+          law, this waives any statutory withdrawal or cooling-off right for the portion
+          of the pack you have used. Nothing in this section limits non-waivable statutory
+          rights in your jurisdiction.
         </p>
         <p>
-          We may, at our sole discretion, issue a refund in exceptional cases (for
-          example, a first purchase with little or no usage, or a billing error).
-          Requests: <a href="mailto:divjotmuchhal@gmail.com">divjotmuchhal@gmail.com</a>{' '}
-          from the address on your account. Discretionary refunds are not a waiver of
-          this policy for any other charge.
+          We will refund a pack in full if you have not started a session against it, if
+          you were charged in error, or if a fault or accessibility barrier on our side
+          prevents you from using what you paid for. Beyond that we may issue a refund at
+          our discretion. Requests:{' '}
+          <a href="mailto:divjotmuchhal@gmail.com">divjotmuchhal@gmail.com</a> from the
+          address on your account. A discretionary refund is not a waiver of this policy
+          for any other charge.
         </p>
 
         <h2>5. Acceptable Use</h2>
@@ -155,6 +161,8 @@ export default function TermsPage() {
         <Link href="/terms">Terms</Link>
         <span aria-hidden="true">·</span>
         <Link href="/privacy">Privacy</Link>
+        <span aria-hidden="true">·</span>
+        <Link href="/accessibility">Accessibility</Link>
         <span aria-hidden="true">·</span>
         <Link href="/">Home</Link>
       </footer>

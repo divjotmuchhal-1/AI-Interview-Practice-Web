@@ -402,6 +402,7 @@ export default function LandingPage() {
             <div className="lp-footer-legal">
               <Link href="/terms" className="lp-footer-link">Terms</Link>
               <Link href="/privacy" className="lp-footer-link">Privacy</Link>
+              <Link href="/accessibility" className="lp-footer-link">Accessibility</Link>
               <span className="lp-footer-note">Not affiliated with the companies referenced in scenarios</span>
             </div>
           </div>
