@@ -12,7 +12,7 @@ import ReportIssueModal from '@/components/ReportIssueModal';
 import { runTests, warmupRunner } from '@/utils/testRunner';
 import { stripBugComments } from '@/utils/stripBugComments';
 
-export default function Workspace({ scenario, onBack, onEndSession, isAiLocked, onUpgrade, daysUntilReset, initialPracticeMode = false, initialHardMode = false, answerKeyAllowed = true }) {
+export default function Workspace({ scenario, onBack, onEndSession, isAiLocked, onUpgrade, daysUntilReset, initialPracticeMode = false, initialHardMode = false, answerKeyAllowed = true, attemptId = null }) {
   // ── Part navigation ──────────────────────────────────────────────────────────
   const [partIndex, setPartIndex] = useState(0);
   const part = scenario.parts[partIndex];
@@ -75,6 +75,58 @@ export default function Workspace({ scenario, onBack, onEndSession, isAiLocked, 
       { type, t: Date.now() - sessionStart.current, data },
     ]);
   }, []);
+
+  // ── Progress heartbeat ───────────────────────────────────────────────────────
+  // A session that is abandoned never reaches the grader, so without this the
+  // only record is that it started. The heartbeat writes how far the user got
+  // and what they did, which is the difference between "quit after 20 seconds"
+  // and "worked 20 minutes and got stuck" — opposite problems with opposite fixes.
+  //
+  // It fires on a timer rather than on change so that last_seen_at advances even
+  // while the user is only reading, and pagehide is a best-effort final flush
+  // rather than the mechanism: beforeunload/pagehide do not fire reliably on tab
+  // kill, crash, or mobile backgrounding, which is exactly when people abandon.
+  const heartbeatRef = useRef({ events: [], partIndex: 0 });
+  heartbeatRef.current = { events, partIndex };
+
+  useEffect(() => {
+    if (!attemptId) return;
+
+    const payload = () => JSON.stringify({
+      attemptId,
+      events:    heartbeatRef.current.events,
+      partIndex: heartbeatRef.current.partIndex,
+    });
+
+    const send = () => {
+      // Telemetry must never interrupt the session, so failures are swallowed.
+      fetch('/api/sessions/progress', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    payload(),
+        keepalive: true,
+      }).catch(() => {});
+    };
+
+    send();                                   // record arrival immediately
+    const id = setInterval(send, 30_000);
+
+    const onHide = () => {
+      // sendBeacon survives teardown where fetch may not. Cookies ride along,
+      // so this authenticates the same way the normal call does.
+      try {
+        const blob = new Blob([payload()], { type: 'application/json' });
+        navigator.sendBeacon('/api/sessions/progress', blob);
+      } catch { /* best effort only */ }
+    };
+    window.addEventListener('pagehide', onHide);
+
+    return () => {
+      clearInterval(id);
+      window.removeEventListener('pagehide', onHide);
+      onHide();                               // leaving the workspace counts too
+    };
+  }, [attemptId]);
 
   // Fire the time's-up moment exactly once. Must come after logEvent is
   // declared: the dependency array is evaluated during render, so referencing

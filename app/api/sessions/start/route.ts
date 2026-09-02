@@ -32,7 +32,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'scenario_id_required' }, { status: 400 });
   }
 
-  const { error } = await supabase.from('session_starts').insert({
+  // The inserted id is returned so the workspace can post heartbeats against
+  // this attempt. Without it there is no handle to attach progress to.
+  const { data, error } = await supabase.from('session_starts').insert({
     user_id:             user.id,
     scenario_id:         scenarioId,
     scenario_title:      str(scenario.title, 300),
@@ -41,7 +43,9 @@ export async function POST(req: NextRequest) {
     practice_mode:       bool(config.practiceMode),
     hard_mode:           bool(config.hardMode),
     answer_key_allowed:  bool(config.answerKeyAllowed),
-  });
+  })
+    .select('id')
+    .single();
 
   if (error) {
     // Never fail the user's session over telemetry: the client ignores this
@@ -49,5 +53,5 @@ export async function POST(req: NextRequest) {
     console.error('session_start insert failed:', error.message);
     return NextResponse.json({ ok: false }, { status: 500 });
   }
-  return NextResponse.json({ ok: true });
+  return NextResponse.json({ ok: true, attemptId: data?.id ?? null });
 }

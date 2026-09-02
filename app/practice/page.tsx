@@ -39,6 +39,9 @@ function PracticePageInner() {
   const [sessionConfig, setSessionConfig] = useState<SessionConfig | null>(null);
   const [sessionData, setSessionData]     = useState<any>(null);
   const [historySession, setHistorySession] = useState<any>(null);
+  // Handle for the current attempt row, used by the workspace heartbeat to
+  // record progress so an abandoned session still leaves evidence.
+  const [attemptId, setAttemptId] = useState<string | null>(null);
 
   const tier         = useTier();
   const searchParams = useSearchParams();
@@ -91,6 +94,7 @@ function PracticePageInner() {
     // start including practice runs, so a scenario opened and then abandoned
     // still leaves a row. Fire and forget: telemetry must never delay or block
     // the user getting into the workspace.
+    setAttemptId(null);
     fetch('/api/sessions/start', {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -102,7 +106,10 @@ function PracticePageInner() {
         },
         config: { ...config, aiEnabled },
       }),
-    }).catch(() => {});
+    })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => setAttemptId(d?.attemptId ?? null))
+      .catch(() => {});
 
     setActiveScenario(pendingScenario);
     setSessionConfig({ ...config, aiEnabled });
@@ -236,6 +243,7 @@ function PracticePageInner() {
         initialHardMode={sessionConfig.hardMode}
         answerKeyAllowed={sessionConfig.answerKeyAllowed}
         isAiLocked={!sessionConfig.aiEnabled}
+        attemptId={attemptId}
         onUpgrade={tier.upgradeToPro}
         daysUntilReset={tier.daysUntilReset}
         onBack={() => { setScreen('picker'); setActiveScenario(null); setSessionConfig(null); }}
