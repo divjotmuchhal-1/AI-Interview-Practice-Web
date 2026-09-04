@@ -122,12 +122,42 @@ function CodeMockup() {
 
 // ── Data ──────────────────────────────────────────────────────────────────────
 const FEATURES = [
-  { Icon: IconCode,     title: 'Debug real broken code',         desc: 'Pre-broken implementations from actual interview patterns. Find and fix the bugs, no blank-slate busywork.' },
-  { Icon: IconBot,      title: 'AI coach, not answer machine',   desc: 'Hints redirect your thinking toward the bug. The coach refuses to write the fix and notices when you rubber-stamp its suggestions.' },
-  { Icon: IconRadar,    title: '6-axis performance review',      desc: 'Scored on Diagnosis, Independence, Precision, Verification, Recovery, and Test Ownership. Not just pass/fail.' },
+  { Icon: IconCode,     title: 'Debug a codebase, not a blank file', desc: 'The format big tech is moving to: inherit code that is already broken, work out why, and fix it without rewriting.' },
+  { Icon: IconBot,      title: 'An AI assistant you are judged on', desc: 'Hints escalate from broad area to specific line, and the coach will not confirm a guess. How you lean on it is part of the score.' },
+  { Icon: IconRadar,    title: 'Graded on process, not output',  desc: 'Passing the tests is the floor. The score reflects how you got there: what you tried first, what you asked, what you checked.' },
   { Icon: IconBuilding, title: 'Real company scenario formats',  desc: 'EventEmitter (Meta), LRU Cache (Amazon), Prefix Trie (Google), Rate Limiter, Transaction Engine, and 6 more.' },
   { Icon: IconFlame,    title: 'Hard mode',                      desc: 'Adds realistic interviewer pressure: scope creep, over-engineering bait, correctness doubts. Practice staying focused.' },
   { Icon: IconTest,     title: 'Live in-browser test runner',    desc: 'Instant feedback on every edit. Hidden tests reveal edge cases once you complete each part.' },
+];
+
+// The six graded axes, grouped the way a candidate thinks about them. Wording
+// tracks the axis definitions in utils/scoring.js so the page never promises a
+// dimension the grader does not actually score.
+const GRADING = [
+  {
+    Icon: IconCode,
+    group: 'How you solved it',
+    axes: [
+      ['Diagnosis', 'Whether you understood the failure before you started changing code.'],
+      ['Recovery',  'When a test went red, whether you adapted or kept trying the same thing.'],
+    ],
+  },
+  {
+    Icon: IconBot,
+    group: 'How you used the AI',
+    axes: [
+      ['Independence', 'Whether you attempted your own fix before escalating to the coach.'],
+      ['Precision',    'The quality of what you asked. Specific questions score above "what is wrong".'],
+    ],
+  },
+  {
+    Icon: IconTest,
+    group: 'How you tested',
+    axes: [
+      ['Test Ownership', 'Whether you drove the test runner as your feedback loop or guessed.'],
+      ['Verification',   'Whether you reviewed AI output before applying it, or rubber-stamped it.'],
+    ],
+  },
 ];
 
 const SCENARIOS = [
@@ -202,15 +232,16 @@ export default function LandingPage() {
         <div className="lp-hero-orb lp-hero-orb--2" aria-hidden="true" />
         <div className="lp-hero-inner">
           <div className="lp-hero-copy">
-            <span className="lp-hero-eyebrow">Free to start · No card</span>
+            <span className="lp-hero-eyebrow">Built for the new AI-assisted interview format</span>
             <h1 className="lp-hero-h1">
               Debug your way<br />
               <span className="lp-hero-gradient">to the offer.</span>
             </h1>
             <p className="lp-hero-sub">
-              Real broken code. Real interview pressure. An AI coach that refuses
-              to just hand you the answer. Practice the part of interviews that
-              actually tests your thinking.
+              Big tech is moving away from blank-slate algorithm puzzles. The new
+              screens hand you a broken codebase and an AI assistant, then watch how
+              you use it. This is practice for that interview, and you get scored on
+              how you worked, not just whether the tests went green.
             </p>
             <div className="lp-hero-btns">
               <Link href="/login" className="lp-btn-primary">Start practicing free →</Link>
@@ -265,17 +296,19 @@ export default function LandingPage() {
               <span className="lp-step-label">Debug</span>
               <h3 className="lp-step-title">Find and fix the bugs</h3>
               <p className="lp-step-desc">
-                A live test runner shows what&apos;s failing. An AI coach in the sidebar
-                answers questions but won&apos;t write the fix for you.
+                A live test runner shows what&apos;s failing. An AI coach answers questions
+                and escalates hints, but never writes the fix, so the work stays yours
+                the way it would in a real screen.
               </p>
             </div>
             <div className="lp-step-sep" aria-hidden="true">→</div>
             <div className="lp-step">
               <span className="lp-step-label">Review</span>
-              <h3 className="lp-step-title">Get scored on how you think</h3>
+              <h3 className="lp-step-title">Get scored on how you worked</h3>
               <p className="lp-step-desc">
-                Six behavioral axes, an AI-generated headline about your session,
-                and a full timeline of every decision you made.
+                Six axes covering how you solved it, how you used the AI, and how you
+                verified the result. Backed by a full timeline of every decision you
+                made.
               </p>
             </div>
           </div>
@@ -283,10 +316,42 @@ export default function LandingPage() {
       </section>
 
       {/* Features */}
+      {/* How you are graded */}
+      <section className="lp-section">
+        <div className="lp-section-inner">
+          <h2 className="lp-section-h2" data-reveal>How you&apos;re graded</h2>
+          <p className="lp-section-sub" data-reveal data-delay="80">
+            Six axes, measured from what you actually did. Every edit, test run and
+            question is timestamped, so the score reflects your process, not a guess
+            at it.
+          </p>
+          <div className="lp-features" data-reveal data-delay="160">
+            {GRADING.map(({ Icon, group, axes }, i) => (
+              <div key={group} className="lp-feature-card" data-reveal data-delay={`${i * 90}`}>
+                <div className="lp-feature-icon"><Icon /></div>
+                <h3 className="lp-feature-title">{group}</h3>
+                {axes.map(([axis, desc]) => (
+                  <p key={axis} className="lp-feature-desc">
+                    <strong>{axis}.</strong> {desc}
+                  </p>
+                ))}
+              </div>
+            ))}
+          </div>
+          <p className="lp-grade-note" data-reveal data-delay="240">
+            Two of these are computed directly rather than judged: applying AI code in
+            under twelve seconds without reading it counts against Verification, and
+            reveal the answer key and Independence is capped no matter what else you did.
+          </p>
+        </div>
+      </section>
+
       <section className="lp-section lp-section--raised">
         <div className="lp-section-inner">
           <h2 className="lp-section-h2" data-reveal>What makes it different</h2>
-          <p className="lp-section-sub" data-reveal data-delay="80">Not LeetCode. Not flashcards. Actual interview simulation.</p>
+          <p className="lp-section-sub" data-reveal data-delay="80">
+            Not LeetCode. Not flashcards. The interview companies are actually running now.
+          </p>
           <div className="lp-features">
             {FEATURES.map(({ Icon, title, desc }, i) => (
               <div key={title} className="lp-feature-card" data-reveal data-delay={`${(i % 3) * 90}`}>

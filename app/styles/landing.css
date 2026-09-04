@@ -468,6 +468,25 @@
   color: var(--text-muted);
   line-height: 1.7;
 }
+/* The grading cards stack one paragraph per axis, so consecutive descriptions
+   need separating. Single-description feature cards are unaffected. */
+.lp-feature-desc + .lp-feature-desc {
+  margin-top: 10px;
+}
+.lp-feature-desc strong {
+  color: var(--text-heading);
+  font-weight: 600;
+}
+
+/* Footnote under the grading grid. Reuses the muted tone of a section sub but
+   without its 48px bottom gap, which would open a hole before the next section. */
+.lp-grade-note {
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.7;
+  margin-top: 28px;
+  max-width: 62ch;
+}
 
 /* Scenario preview */
 .lp-preview-grid {
