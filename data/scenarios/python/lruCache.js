@@ -17,7 +17,6 @@ class LRUCache:
         self.head = Node()   # sentinel: LRU end
         self.tail = Node()   # sentinel: MRU end
         self.head.next = self.tail
-        # Bug 1: missing self.tail.prev = self.head
         # Without it, the first _add_last() crashes on self.tail.prev.next
 
     def get(self, key):
@@ -39,7 +38,7 @@ class LRUCache:
         self.cache[key] = node
         self._add_last(node)
         if len(self.cache) > self.capacity:
-            evict = self.tail.prev   # Bug 2: should be self.head.next (LRU end)
+            evict = self.tail.prev
             self._remove(evict)
             del self.cache[evict.key]
 
@@ -73,7 +72,6 @@ class LRUCache:
         self.head.next = self.tail
         self.tail.prev = self.head
 
-    # Bug: returns the value but doesn't move the node to the MRU end
     def get(self, key):
         if key not in self.cache:
             return -1
@@ -81,7 +79,7 @@ class LRUCache:
 
     def put(self, key, value):
         if key in self.cache:
-            self.cache[key].val = value  # updates value but doesn't reorder (Part 3's bug, not yet fixed)
+            self.cache[key].val = value
             return
         node = Node(key, value)
         self.cache[key] = node
@@ -132,7 +130,7 @@ class LRUCache:
     # Trap: updates the value of an existing key but doesn't reorder the node
     def put(self, key, value):
         if key in self.cache:
-            self.cache[key].val = value   # Bug: missing _remove + _add_last
+            self.cache[key].val = value
             return
         node = Node(key, value)
         self.cache[key] = node

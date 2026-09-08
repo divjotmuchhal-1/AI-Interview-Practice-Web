@@ -43,7 +43,7 @@ function compose(middlewares) {
         dispatch(i + 1);
       });
     }
-    dispatch(1); // <-- start of chain
+    dispatch(1);
     return ctx;
   };
 }
@@ -182,7 +182,6 @@ function withGuard(predicate, handler) {
     if (!predicate(ctx)) {
       ctx.blocked = true;
       ctx.blockReason = 'unauthorized';
-      // falls through, handler still runs
     }
     handler(ctx, next);
   };
@@ -323,7 +322,7 @@ function matchRoute(path, pattern) {
   if (pattern === '*') return true;
   if (pattern.endsWith('/*')) {
     var prefix = pattern.slice(0, -2);
-    return path.startsWith(prefix); // too broad
+    return path.startsWith(prefix);
   }
   return path === pattern;
 }

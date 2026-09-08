@@ -42,7 +42,6 @@ The query returns a single row with a grand total instead of one row per user.
 FROM orders
 WHERE status = 'completed'
 ORDER BY total_spend DESC;
--- Bug: returns a single grand total instead of per-user subtotals
 `,
       },
 
@@ -137,7 +136,6 @@ WHERE status = 'completed'
   AND total_spend > 100
 GROUP BY user_id
 ORDER BY total_spend DESC;
--- Bug: aggregate alias can't be referenced in WHERE, wrong clause
 `,
       },
 

@@ -36,7 +36,6 @@ const STARTER_P1 = {
   'solution.js': `function cartReducer(state, action) {
   switch (action.type) {
     case 'ADD_ITEM':
-      // BUG: replaces all items instead of appending
       return { ...state, items: [action.item] };
     case 'REMOVE_ITEM':
       return { ...state, items: state.items.filter((i) => i.id !== action.id) };
@@ -73,7 +72,6 @@ const STARTER_P2 = {
       return {
         ...state,
         items: updated,
-        // BUG: uses state.items (old array) instead of updated (new array)
         total: state.items.reduce((s, i) => s + i.price * i.qty, 0),
       };
     }

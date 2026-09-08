@@ -47,7 +47,6 @@ SELECT user_id,
        NTILE(4) OVER (ORDER BY total_spend ASC) AS spend_quartile
 FROM user_totals
 ORDER BY total_spend DESC;
--- Bug: ORDER BY ASC assigns quartile 1 to the lowest spenders
 -- Flip to DESC so quartile 1 = highest total_spend
 `,
       },
@@ -219,7 +218,6 @@ SELECT user_id,
        RANK() OVER (ORDER BY total_spend DESC) AS spend_rank
 FROM user_totals
 ORDER BY spend_rank, user_id;
--- Bug: RANK() skips numbers after ties. Two users at rank 2 make the next user rank 4
 -- Replace RANK() with DENSE_RANK() for consecutive rank numbers
 `,
       },

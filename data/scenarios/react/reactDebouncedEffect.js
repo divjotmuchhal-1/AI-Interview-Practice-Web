@@ -42,7 +42,6 @@ const STARTER_P1 = {
       var op = ops[i];
 
       if (op.type === 'TRIGGER') {
-        // BUG: pushes a new timer without cancelling the existing one
         timers.push({ value: op.value, remaining: delay });
 
       } else if (op.type === 'TICK') {
@@ -75,7 +74,6 @@ const STARTER_P2 = {
       var op = ops[i];
 
       if (op.type === 'TRIGGER') {
-        // BUG: ignores new triggers while a timer is already pending
         if (timers.length > 0) continue;
         timers = [{ value: op.value, remaining: delay }];
 

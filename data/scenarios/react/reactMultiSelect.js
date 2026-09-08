@@ -36,7 +36,6 @@ const STARTER_P1 = {
   'solution.js': `function selectReducer(state, action) {
   switch (action.type) {
     case 'TOGGLE': {
-      // BUG: condition is inverted. Removes when NOT selected, adds when IS selected
       if (!state.selected.includes(action.id)) {
         return { ...state, selected: state.selected.filter(function (id) { return id !== action.id; }) };
       }
@@ -74,7 +73,6 @@ const STARTER_P2 = {
       return { ...state, selected: [...state.selected, action.id] };
     }
     case 'SELECT_ALL_TOGGLE': {
-      // BUG: deselects whenever any item is selected instead of only when ALL are selected
       if (state.selected.length > 0) {
         return { ...state, selected: [] };
       }

@@ -39,7 +39,7 @@ const STARTER_P1 = {
 
     // Schedule all updates before running any (mirrors React batching).
     var queue = amounts.map(function (amount) {
-      var captured = state; // BUG: captures state at scheduling time, not execution time
+      var captured = state;
       return function () { return captured + amount; };
     });
 
@@ -76,7 +76,6 @@ const STARTER_P2 = {
         tick();
       }
 
-      // BUG: missing cleanup: callbacks[idx] = null;
       results.push(activeCalls);
     }
 

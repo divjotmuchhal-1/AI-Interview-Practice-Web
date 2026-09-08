@@ -43,8 +43,6 @@ FROM events
 WHERE event_type IN ('page_view', 'signup', 'purchase')
 GROUP BY event_type
 ORDER BY user_count DESC;
--- Bug: counts total events, not unique users. A user who views the page 4×
--- contributes 4 to page_view instead of 1
 `,
       },
 
@@ -176,7 +174,6 @@ SELECT
   purchase_users,
   purchase_users / signup_users AS conversion_rate
 FROM counts;
--- Bug: SQLite performs integer division. 1 / 4 = 0, not 0.25
 `,
       },
 

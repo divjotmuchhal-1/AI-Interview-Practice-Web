@@ -41,7 +41,6 @@ Rank 1 is assigned to the lowest score in each category. The leaderboard is inve
        RANK() OVER (PARTITION BY category ORDER BY score ASC) AS rnk
 FROM scores
 ORDER BY category, rnk;
--- Bug: rank 1 goes to the lowest score instead of the highest
 `,
       },
 
@@ -146,7 +145,6 @@ FROM (
 ) sub
 WHERE rnk = 1
 ORDER BY category;
--- Bug: PARTITION BY player_id returns each player's personal best, not the top per category
 `,
       },
 

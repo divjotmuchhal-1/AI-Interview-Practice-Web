@@ -39,7 +39,6 @@ const STARTER_P1 = {
 
 EventEmitter.prototype.on = function (event, handler) {
   if (!this._listeners[event]) this._listeners[event] = [];
-  // BUG: wraps handler in a new function. Stored ref !== original handler
   this._listeners[event].push(function () { handler(); });
 };
 
@@ -94,7 +93,6 @@ EventEmitter.prototype.off = function (event, handler) {
 };
 
 EventEmitter.prototype.emit = function (event, data) {
-  // BUG: invokes handlers with no arguments. Data is lost
   (this._listeners[event] || []).forEach(function (h) { h(); });
 };
 

@@ -40,8 +40,6 @@ Every row has the same \`running_total\`: the grand total across all dates.
        SUM(signups) OVER () AS running_total
 FROM daily_signups
 ORDER BY date;
--- Bug: OVER () with no ORDER BY computes the grand total for every row
--- instead of a row-by-row running sum
 `,
       },
 
@@ -155,7 +153,6 @@ The rolling average includes 8 days of data instead of 7 once enough history exi
        ), 2) AS rolling_avg_7d
 FROM daily_signups
 ORDER BY date;
--- Bug: ROWS BETWEEN 7 PRECEDING AND CURRENT ROW = 8 rows (7 before + current)
 -- A 7-day window needs 6 PRECEDING rows plus the current row
 `,
       },

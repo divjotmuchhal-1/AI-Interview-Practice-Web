@@ -42,7 +42,6 @@ const STARTER_P1 = {
   var lastResult;
   return function () {
     var args = Array.prototype.slice.call(arguments);
-    // BUG: compares array references, always false, cache never hits
     if (lastArgs !== null && lastArgs === args) {
       return lastResult;
     }
@@ -75,7 +74,6 @@ const STARTER_P2 = {
   var lastResult;
   return function () {
     var args = Array.prototype.slice.call(arguments);
-    // BUG: only compares the first argument
     if (lastArgs !== null && lastArgs[0] === args[0]) {
       return lastResult;
     }

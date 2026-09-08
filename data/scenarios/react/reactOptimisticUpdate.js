@@ -58,7 +58,6 @@ const STARTER_P1 = {
       delete p2[action.id];
       return {
         items: state.items.map(function (i) {
-          // BUG: op.optimistic is the new text already on screen. Should be op.original
           return i.id === action.id ? Object.assign({}, i, { text: op.optimistic }) : i;
         }),
         pending: p2,
@@ -92,7 +91,6 @@ const STARTER_P2 = {
       };
     }
     case 'CONFIRM': {
-      // BUG: does not remove the pending entry. Stale ROLLBACKs can still apply
       return state;
     }
     case 'ROLLBACK': {

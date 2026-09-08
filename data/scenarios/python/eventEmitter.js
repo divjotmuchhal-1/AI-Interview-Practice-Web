@@ -21,14 +21,14 @@ class EventEmitter:
     def off(self, event, fn):
         if event not in self._listeners:
             return self
-        del self._listeners[event]  # Bug: removes ALL listeners for this event
+        del self._listeners[event]
         return self
 
     def emit(self, event, *args):
         fns = self._listeners.get(event, [])
         if not fns:
             return False
-        for f in reversed(list(fns)):  # Bug: fires in reverse insertion order
+        for f in reversed(list(fns)):
             f(*args)
         return True
 `.trim();
@@ -47,7 +47,7 @@ class EventEmitter:
 
     def once(self, event, fn):
         def wrapper(*args):
-            fn(*args)  # Bug: missing self.off(event, wrapper)
+            fn(*args)
         wrapper._original = fn
         return self.on(event, wrapper)
 
@@ -90,7 +90,6 @@ class EventEmitter:
     def off(self, event, fn):
         if event not in self._listeners:
             return self
-        # Bug: only matches by identity, can't cancel a once() wrapper via the original fn
         self._listeners[event] = [l for l in self._listeners[event] if l is not fn]
         return self
 

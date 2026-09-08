@@ -40,7 +40,6 @@ const STARTER_P1 = {
         ...state,
         query: action.query,
         filteredItems: state.allItems.filter(function (item) {
-          // BUG: case-sensitive. 'Q3 Report'.includes('report') is false
           return item.name.includes(action.query);
         }),
       };
@@ -84,7 +83,6 @@ function searchReducer(state, action) {
       };
     }
     case 'SORT_BY': {
-      // BUG: ignores active query, sorts allItems directly instead of calling computeVisible
       var sorted = [...state.allItems].sort(function (a, b) {
         return a[action.field].localeCompare(b[action.field]);
       });

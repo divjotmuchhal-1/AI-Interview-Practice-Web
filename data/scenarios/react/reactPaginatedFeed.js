@@ -40,7 +40,7 @@ const STARTER_P1 = {
     case 'FETCH_SUCCESS':
       return {
         ...state,
-        items:   action.items,  // BUG: replaces all items instead of appending
+        items:   action.items,
         page:    state.page + 1,
         loading: false,
         hasMore: action.items.length > 0,
@@ -79,7 +79,6 @@ const STARTER_P2 = {
         items:   [],
         hasMore: true,
         loading: false,
-        // BUG: page not reset to 0
       };
     default:
       return state;
