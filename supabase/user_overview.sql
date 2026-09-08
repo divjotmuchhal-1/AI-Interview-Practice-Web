@@ -21,7 +21,24 @@ select
   u.created_at::date                                as signed_up,
   u.last_sign_in_at::date                           as last_seen,
   (u.email_confirmed_at is not null)                as confirmed,
-  coalesce(s.status, 'free')                        as plan,
+  -- status only ever holds 'pro' for the legacy monthly subscription, which is
+  -- no longer sold. A pack buyer keeps status = 'free' forever, so reading
+  -- status alone reports a paying customer as a free user. Credits are the
+  -- purchase, so the plan label has to be derived from them.
+  case
+    when s.status = 'pro'                                    then 'pro'
+    when coalesce(s.credits_remaining, 0) > 0
+     and (s.credits_expire_at is null or s.credits_expire_at > now())
+                                                             then 'pack'
+    when coalesce(s.credits_remaining, 0) > 0                then 'pack (expired)'
+    else 'free'
+  end                                               as plan,
+  -- Null rather than 0 for people who never bought, so a customer who has spent
+  -- every session is visibly different from someone who never paid.
+  case when coalesce(s.credits_remaining, 0) > 0
+         or s.credits_expire_at is not null
+       then coalesce(s.credits_remaining, 0) end    as pack_sessions_left,
+  s.credits_expire_at::date                         as pack_expires,
   -- ever_started is true the moment consume_session writes a row, which is the
   -- earliest honest signal: it fires when a session begins, whereas
   -- graded_sessions only fires if the user makes it to "End Session".
@@ -31,6 +48,8 @@ select
   -- Mirrors sessionLimitFor() in lib/sessionLimits.ts: the free tryout is
   -- counted in ai_sessions_used, so the month it was spent carries a +1 bonus
   -- that keeps it from eating into the monthly quota.
+  -- Free monthly allowance only. Purchased sessions are counted separately in
+  -- pack_sessions_left and are spent after this allowance runs out.
   (case when s.status = 'pro' then 60 else 2 end)
     + (case
          when s.user_id is null then 1
@@ -41,7 +60,13 @@ select
   coalesce(g.graded_sessions, 0)                    as graded_sessions,
   g.avg_score,
   g.last_session,
-  (s.stripe_subscription_id is not null)            as has_subscription,
+  -- True only for a legacy monthly subscriber. Named for what it is: a pack is
+  -- a one-time payment and has no subscription, so this is false for customers.
+  (s.stripe_subscription_id is not null)            as has_legacy_subscription,
+  -- The question actually being asked when someone opens this view.
+  (coalesce(s.credits_remaining, 0) > 0
+     and (s.credits_expire_at is null or s.credits_expire_at > now()))
+                                                    as has_paid,
   u.id                                              as user_id
 from auth.users u
 left join user_subscriptions s
