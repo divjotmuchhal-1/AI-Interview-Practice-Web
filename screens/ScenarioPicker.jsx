@@ -431,7 +431,7 @@ function TrackSection({ track, onSelect, isLocked, tierLocked, isOpen, onToggle,
           {tierLocked && (
             <div className="track-tier-gate">
               <p className="track-tier-gate-msg">This track is available on the Pro plan.</p>
-              <button className="track-tier-gate-btn" onClick={onUpgrade}>{`Unlock all tracks — $${PACK_PRICE_USD}`}</button>
+              <button className="track-tier-gate-btn" onClick={onUpgrade}>{`Unlock all tracks for $${PACK_PRICE_USD}`}</button>
             </div>
           )}
           <div className={`track-grid ${tierLocked ? 'track-grid--blurred' : ''}`}>
@@ -539,7 +539,7 @@ function OnboardingModal({ onDone }) {
             </div>
             <h2 className="onboard-heading">Your coding interview coach</h2>
             <p className="onboard-body">
-              Solve real problems in the exact formats used at Google, Amazon, Meta, and Stripe.
+              Solve realistic problems in formats inspired by companies like Google, Amazon, Meta, and Stripe.
               Python debugging, JavaScript build-outs, SQL analytics, React, and more.
               After every session the AI breaks down your approach and tells you where to improve.
             </p>

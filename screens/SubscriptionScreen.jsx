@@ -15,7 +15,7 @@ const FREE_FEATURES = [
 const PACK_EXTRA = [
   `${PACK_SESSIONS} AI-coached sessions, valid ${PACK_VALID_DAYS} days`,
   'All 7 tracks: SQL, React, Code Review & Large Codebase unlocked',
-  'Sessions roll over — no monthly reset, nothing expires early',
+  'Sessions roll over. No monthly reset, nothing expires early',
   'One payment. No subscription, nothing to cancel.',
 ];
 

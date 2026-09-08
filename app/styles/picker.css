@@ -1262,3 +1262,14 @@
   color: var(--text);
 }
 .scm-session-cost--trial strong { color: var(--accent); }
+
+/* Trademark notice under the track list. Company badges appear throughout the
+   picker, so the disclaimer has to live where the badges are, not only on the
+   marketing page a signed-in user may never see again. */
+.picker-affiliation-note {
+  margin: -4px 0 18px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text-muted);
+  max-width: 68ch;
+}

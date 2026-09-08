@@ -32,16 +32,24 @@ export default function PrivacyPage() {
             are stored hashed; we never see them in plain text.
           </li>
           <li>
-            <strong>Practice activity.</strong> The code you write in scenarios, test
-            results, messages you exchange with the AI coach, session events (such as
-            when you run tests or view an answer key), and the AI-generated scores and
-            feedback for your sessions. This history powers your review and progress
-            screens.
+            <strong>Practice activity.</strong> The code you write in scenarios,
+            including periodic snapshots saved while you work, test results, messages
+            you exchange with the AI coach, session events (such as when you run tests
+            or view an answer key), and the AI-generated scores and feedback for your
+            sessions. Snapshots are sent to our server about every 30 seconds during a
+            session so an unfinished attempt is not lost. This history powers your
+            review and progress screens.
+          </li>
+          <li>
+            <strong>Survey responses.</strong> If you answer one of the short in-app
+            questions (for example, why you signed up, whether you have an interview
+            coming up, or why you left a session), we store your answers alongside your
+            account. Every question is optional and can be dismissed.
           </li>
           <li>
             <strong>Payment data.</strong> Payments are processed by Stripe. We receive
-            your subscription status and billing events; we never receive or store your
-            card number.
+            your purchase and billing events; we never receive or store your card
+            number.
           </li>
           <li>
             <strong>Technical data.</strong> Standard server logs (IP address, browser
@@ -72,16 +80,32 @@ export default function PrivacyPage() {
         <p>We share data only with the processors needed to run the Service:</p>
         <ul>
           <li><strong>Supabase</strong>: authentication and database hosting (account data, session history).</li>
-          <li><strong>Stripe</strong>: payment processing and subscription management.</li>
+          <li><strong>Stripe</strong>: payment processing and billing records.</li>
           <li><strong>Anthropic</strong>: AI coaching and grading (session content, as described above).</li>
-          <li><strong>Hosting provider</strong> (e.g., Vercel): serving the application and standard request logs.</li>
+          <li><strong>Vercel</strong>: hosting, standard request logs, and privacy-friendly
+            product analytics (see section 5).</li>
+          <li><strong>Sentry</strong>: error monitoring, so crashes can be found and fixed.
+            Configured not to send personal information and not to record your screen.</li>
+          <li><strong>Google</strong>: if you choose to sign in with Google, it verifies your
+            identity and provides your email address. We never receive your Google password.</li>
         </ul>
 
         <h2>5. Cookies and Local Storage</h2>
         <p>
           We use authentication cookies (via Supabase) to keep you signed in, and
-          browser local storage for product preferences such as onboarding state. We do
-          not use third-party advertising or analytics trackers.
+          browser local storage for product preferences such as onboarding state.
+        </p>
+        <p>
+          We use <strong>Vercel Analytics</strong> to count how many people reach each
+          step of the product, such as opening a scenario or starting a session. It is
+          cookieless, does not follow you to other sites, and we never attach your
+          email, account id, code, or chat messages to these counts. We also use
+          <strong> Sentry</strong> to record technical errors, configured not to send
+          personal information and not to record your screen.
+        </p>
+        <p>
+          We do not use advertising trackers, we do not run cross-site tracking, and we
+          do not sell or share your data with advertisers.
         </p>
 
         <h2>6. Data Retention and Deletion</h2>
@@ -95,7 +119,8 @@ export default function PrivacyPage() {
 
         <h2>7. Your Rights</h2>
         <p>
-          Depending on where you live (for example, the EU/EEA under GDPR or California
+          Depending on where you live (for example, the EU/EEA under GDPR, India under
+          the DPDP Act, or California
           under CCPA), you may have rights to access, correct, export, or delete your
           personal data, and to object to certain processing. To exercise any of these
           rights, contact us at the email below. We do not discriminate against you for

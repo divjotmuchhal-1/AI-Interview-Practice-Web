@@ -126,6 +126,20 @@ export default function TermsPage() {
           error-free, or that content (including scenario tests and answer keys) is free
           of defects.
         </p>
+        <p>
+          <strong>No outcome guarantee.</strong> The Service is practice material. We do
+          not promise that using it will get you an interview, a job offer, or a
+          particular result in any assessment, and nothing on the Service is a
+          prediction of how you will perform in a real interview. Scores and feedback
+          are AI-generated estimates about a practice session, not a professional
+          evaluation of your abilities.
+        </p>
+        <p>
+          <strong>No affiliation.</strong> Company names are used only to describe the
+          style of a problem. We are not affiliated with, endorsed by, or sponsored by
+          any company named on the Service, and scenarios are not real interview
+          questions from those companies. All trademarks belong to their owners.
+        </p>
 
         <h2>9. Limitation of Liability</h2>
         <p>
@@ -136,21 +150,39 @@ export default function TermsPage() {
           lost profits.
         </p>
 
-        <h2>10. Termination</h2>
+        <h2>10. Governing Law and Disputes</h2>
+        <p>
+          These Terms are governed by the laws of the State of Maryland, USA, without
+          regard to its conflict of law rules. Any dispute must be brought in the state
+          or federal courts located in Maryland, and you agree to their personal
+          jurisdiction.
+        </p>
+        <p>
+          Before filing anything, email{' '}
+          <a href="mailto:divjotmuchhal@gmail.com">divjotmuchhal@gmail.com</a> and give
+          us 30 days to resolve it. Most problems are a refund or a bug fix, and we
+          would rather do either than argue.
+        </p>
+        <p>
+          Nothing here limits any right you have under mandatory consumer protection law
+          in your country of residence.
+        </p>
+
+        <h2>11. Termination</h2>
         <p>
           You may stop using the Service and delete your account at any time. We may
           suspend or terminate your access for violation of these Terms, with refunds
           handled per Section 4 where applicable.
         </p>
 
-        <h2>11. Changes to These Terms</h2>
+        <h2>12. Changes to These Terms</h2>
         <p>
           We may update these Terms from time to time. Material changes will be
           communicated through the Service or by email, and continued use after changes
           take effect constitutes acceptance.
         </p>
 
-        <h2>12. Contact</h2>
+        <h2>13. Contact</h2>
         <p>
           Questions about these Terms:{' '}
           <a href="mailto:divjotmuchhal@gmail.com">divjotmuchhal@gmail.com</a>
