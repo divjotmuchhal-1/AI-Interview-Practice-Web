@@ -82,8 +82,15 @@ select
 
   -- ── Context ──────────────────────────────────────────────────────────────
   st.last_scenario,
-  u.created_at::date                                    as signed_up,
-  greatest(u.last_sign_in_at, st.last_started)::date     as last_seen,
+  -- Full timestamp, not a date. The time of day is what lets a run of signups
+  -- be matched to the post or video that caused it, and truncating to a date
+  -- throws that away permanently.
+  u.created_at                                          as signed_up,
+  greatest(u.last_sign_in_at, st.last_started)          as last_seen,
+  -- How long after signing up they started their first session. Null means
+  -- they never started one.
+  (select min(started_at) - u.created_at
+     from session_starts where user_id = u.id)          as time_to_first_session,
   (u.email_confirmed_at is not null)                    as confirmed,
   -- Your own accounts. 22 of the 94 session starts are yours, which is enough
   -- to make every rate wrong if you forget. Sort or filter on this rather than
