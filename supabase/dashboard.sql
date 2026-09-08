@@ -46,15 +46,20 @@ select
     when s.status = 'pro'                                             then 'legacy pro'
     else                                                                   'free'
   end                                                   as plan,
-  coalesce(s.credits_remaining, 0)                      as sessions_left,
+  -- What they can actually run right now: free allowance plus anything they
+  -- bought. Purchased credits alone answer a different question, and calling
+  -- that "sessions left" reads as zero for every free user who in fact has
+  -- their whole monthly allowance untouched.
+  q.free_left + q.pack_left                             as sessions_left,
+  q.pack_left,
   s.credits_expire_at::date                             as pack_expires,
-  -- Free allowance is spent before purchased sessions, so this keeps moving
-  -- even for a customer.
-  coalesce(s.sessions_used_this_month, 0)               as free_used_this_month,
+  q.free_left,
+  q.free_used,
+  q.free_limit,
   coalesce(s.trial_used, false)                         as tryout_used,
-  -- Ran out of free sessions at some point. The population that had to make a
-  -- decision about paying.
-  (coalesce(s.sessions_used_this_month, 0) >= 2)        as hit_paywall,
+  -- Out of free sessions this month. Anyone here has to decide about paying
+  -- before they can practice again.
+  (q.free_left = 0)                                     as out_of_free,
   -- A Stripe customer record exists, which means the upgrade button was
   -- clicked. It does not mean a card was entered: the customer is created
   -- before the checkout session opens.
@@ -101,6 +106,45 @@ select
 
 from auth.users u
 left join user_subscriptions s on s.user_id = u.id
+
+-- Quota, computed the way the application computes it.
+--
+-- The monthly reset is lazy: consume_session zeroes the counter the next time
+-- the user does something, so a row untouched since last month still holds
+-- last month's number. 44 of 62 rows were in that state, which made every
+-- free_used and paywall figure read as current when it was five weeks old.
+left join lateral (
+  select
+    used,
+    lim                                                 as free_limit,
+    greatest(lim - used, 0)                             as free_left,
+    case
+      when s.credits_expire_at is null
+        or s.credits_expire_at > now() then coalesce(s.credits_remaining, 0)
+      else 0
+    end                                                 as pack_left,
+    used                                                as free_used
+  from (
+    select
+      case
+        when date_trunc('month', s.sessions_reset_at) = date_trunc('month', now())
+          then coalesce(s.sessions_used_this_month, 0)
+        else 0
+      end                                               as used,
+      -- Mirrors sessionLimitFor() in lib/sessionLimits.ts. The tryout spends a
+      -- session, so the month it was spent carries a +1 so it does not eat the
+      -- monthly allowance. An unspent tryout gets the bonus too, since whatever
+      -- session they start next is by definition the tryout.
+      (case when s.status = 'pro' then 60 else 2 end)
+      + (case
+           when s.user_id is null                     then 1
+           when not coalesce(s.trial_used, false)     then 1
+           when date_trunc('month', s.trial_used_at)
+                = date_trunc('month', now())          then 1
+           else 0
+         end)                                           as lim
+  ) base
+) q on true
 
 left join lateral (
   select
