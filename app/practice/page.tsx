@@ -12,8 +12,10 @@ import ChangePasswordScreen from '@/screens/ChangePasswordScreen';
 import SubscriptionScreen from '@/screens/SubscriptionScreen';
 import SessionConfigModal from '@/components/SessionConfigModal';
 import MobileNotice from '@/components/MobileNotice';
+import MicroSurvey from '@/components/MicroSurvey';
 import { useTier } from '@/hooks/useTier';
 import { track } from '@/lib/track';
+import { alreadyAsked } from '@/lib/researchPrompts';
 
 type Screen = 'picker' | 'workspace' | 'review' | 'history' | 'historysession' | 'changePassword' | 'profile' | 'profilesession' | 'subscription';
 
@@ -42,6 +44,28 @@ function PracticePageInner() {
   // Handle for the current attempt row, used by the workspace heartbeat to
   // record progress so an abandoned session still leaves evidence.
   const [attemptId, setAttemptId] = useState<string | null>(null);
+  // The Phase 1 research prompt. Screen transitions are funnelled through
+  // askThen so a question can be asked at the moment it is being lived, which
+  // is the only time the answer is worth anything. `next` is the navigation the
+  // user asked for and always runs, answered or skipped.
+  const [survey, setSurvey] = useState<
+    { moment: string; context: Record<string, unknown>; next: () => void } | null
+  >(null);
+
+  const askThen = (
+    moment: string,
+    context: Record<string, unknown>,
+    next: () => void,
+  ) => {
+    if (alreadyAsked(moment)) { next(); return; }
+    setSurvey({ moment, context, next });
+  };
+
+  const closeSurvey = () => {
+    const next = survey?.next;
+    setSurvey(null);
+    next?.();
+  };
 
   const tier         = useTier();
   const searchParams = useSearchParams();
@@ -111,10 +135,16 @@ function PracticePageInner() {
       .then((d) => setAttemptId(d?.attemptId ?? null))
       .catch(() => {});
 
-    setActiveScenario(pendingScenario);
+    const scenario = pendingScenario;
+    setActiveScenario(scenario);
     setSessionConfig({ ...config, aiEnabled });
     setPendingScenario(null);
-    setScreen('workspace');
+    // Asked once, on the way into the first session. Intent and current
+    // alternative are only answered honestly before the product has had a
+    // chance to shape the answer, and by this point the user has committed to
+    // starting so the prompt is not competing with the decision to try.
+    askThen('intake', { scenarioId: scenario?.id, scenarioTitle: scenario?.title },
+      () => setScreen('workspace'));
   };
 
   const handleSignOut = async () => {
@@ -158,8 +188,24 @@ function PracticePageInner() {
     setScreen('profilesession');
   };
 
+  // The prompt is a fixed overlay that must survive whichever screen is
+  // mounted, and this component returns early per screen, so every screen-level
+  // return is routed through here rather than repeating the overlay in each.
+  const withSurvey = (node: React.ReactNode) => (
+    <>
+      {node}
+      {survey && (
+        <MicroSurvey
+          moment={survey.moment}
+          context={survey.context}
+          onClose={closeSurvey}
+        />
+      )}
+    </>
+  );
+
   if (screen === 'subscription') {
-    return (
+    return withSurvey(
       <SubscriptionScreen
         tier={tier.tier}
         sessionsUsed={tier.sessionsUsed}
@@ -169,19 +215,25 @@ function PracticePageInner() {
         daysUntilReset={tier.daysUntilReset}
         onUpgrade={tier.upgradeToPro}
         onManageSub={tier.manageSub}
-        onBack={() => setScreen('picker')}
+        onBack={() => {
+          // Only ask people who actually hit the wall. Someone browsing the
+          // pricing page with sessions still in hand has no reason not to buy
+          // yet, so their answer would be noise.
+          if (tier.isLocked) askThen('paywall', {}, () => setScreen('picker'));
+          else setScreen('picker');
+        }}
       />
     );
   }
 
   if (screen === 'changePassword') {
-    return (
+    return withSurvey(
       <ChangePasswordScreen onBack={() => setScreen('picker')} />
     );
   }
 
   if (screen === 'profile') {
-    return (
+    return withSurvey(
       <ProfileScreen
         onBack={() => setScreen('picker')}
         onViewSession={handleViewProfileSession}
@@ -192,7 +244,7 @@ function PracticePageInner() {
   }
 
   if (screen === 'profilesession' && historySession) {
-    return (
+    return withSurvey(
       <ReviewScreen
         events={historySession.events}
         scenario={historySession.scenario}
@@ -203,7 +255,7 @@ function PracticePageInner() {
   }
 
   if (screen === 'history') {
-    return (
+    return withSurvey(
       <HistoryScreen
         onBack={() => setScreen('picker')}
         onViewSession={handleViewHistorySession}
@@ -212,7 +264,7 @@ function PracticePageInner() {
   }
 
   if (screen === 'historysession' && historySession) {
-    return (
+    return withSurvey(
       <ReviewScreen
         events={historySession.events}
         scenario={historySession.scenario}
@@ -223,19 +275,23 @@ function PracticePageInner() {
   }
 
   if (screen === 'review' && sessionData) {
-    return (
+    return withSurvey(
       <ReviewScreen
         events={sessionData.events}
         scenario={sessionData.scenario}
         aiFeedback={sessionData.aiEnabled}
         onUpgrade={tier.tier === 'free' ? tier.upgradeToPro : undefined}
-        onBack={() => { setScreen('picker'); setSessionData(null); setActiveScenario(null); }}
+        onBack={() => askThen(
+          'review',
+          { scenarioId: activeScenario?.id, scenarioTitle: activeScenario?.title, attemptId },
+          () => { setScreen('picker'); setSessionData(null); setActiveScenario(null); },
+        )}
       />
     );
   }
 
   if (screen === 'workspace' && activeScenario && sessionConfig) {
-    return (
+    return withSurvey(
       <Workspace
         key={activeScenario.id}
         scenario={activeScenario}
@@ -246,7 +302,11 @@ function PracticePageInner() {
         attemptId={attemptId}
         onUpgrade={tier.upgradeToPro}
         daysUntilReset={tier.daysUntilReset}
-        onBack={() => { setScreen('picker'); setActiveScenario(null); setSessionConfig(null); }}
+        onBack={() => askThen(
+          'abandon',
+          { scenarioId: activeScenario.id, scenarioTitle: activeScenario.title, attemptId },
+          () => { setScreen('picker'); setActiveScenario(null); setSessionConfig(null); },
+        )}
         onEndSession={(events: any[]) => {
           track('session_completed', {
             scenario: activeScenario.id,
@@ -259,7 +319,7 @@ function PracticePageInner() {
     );
   }
 
-  return (
+  return withSurvey(
     <>
       <MobileNotice />
       {pendingScenario && (
