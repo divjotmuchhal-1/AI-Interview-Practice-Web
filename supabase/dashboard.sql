@@ -8,6 +8,11 @@
 -- the people worth looking at are already at the top: paying customers first,
 -- then whoever has done the most.
 --
+-- Survey answers are not in here. They are one row per answer rather than one
+-- per user, so folding them in would either duplicate people or flatten what
+-- they said into an unreadable cell. They live in research_answers and
+-- research_tally, created by user_research.sql.
+--
 -- Reading user_subscriptions directly is what makes the data look broken. It is
 -- 62 rows in arbitrary order where the columns that matter are zero for almost
 -- everyone, and status says 'free' even for a customer who paid, because status
@@ -70,9 +75,10 @@ select
   (st.active_days > 1)                                  as came_back,
 
   -- ── What they said ───────────────────────────────────────────────────────
-  -- Survey free text and bug reports, newest first, on one line. Null for
-  -- almost everyone, which is what makes the rows that have it worth spotting.
-  fb.feedback,
+  -- Bug reports only. Survey answers are deliberately not joined here: they
+  -- live in research_answers and research_tally, so this view has no dependency
+  -- on user_research and can be created before that table exists.
+  fb.bug_reports,
 
   -- ── Context ──────────────────────────────────────────────────────────────
   st.last_scenario,
@@ -119,18 +125,8 @@ left join lateral (
 ) g on true
 
 left join lateral (
-  select string_agg(txt, '  |  ' order by created_at desc) as feedback
-  from (
-    select created_at, moment || ': ' || coalesce(
-             answers ->> 'note',
-             (select string_agg(a.key || '=' || (a.value #>> '{}'), ', ')
-                from jsonb_each(answers) a where a.key <> 'note')
-           ) as txt
-    from user_research where user_id = u.id
-    union all
-    select created_at, 'bug: ' || description
-    from issue_reports where user_id = u.id
-  ) all_feedback
+  select string_agg(description, '  |  ' order by created_at desc) as bug_reports
+  from issue_reports where user_id = u.id
 ) fb on true
 
 order by
