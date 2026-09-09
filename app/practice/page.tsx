@@ -48,6 +48,7 @@ function PracticePageInner() {
   // askThen so a question can be asked at the moment it is being lived, which
   // is the only time the answer is worth anything. `next` is the navigation the
   // user asked for and always runs, answered or skipped.
+  const [startError, setStartError] = useState<string | null>(null);
   const [survey, setSurvey] = useState<
     { moment: string; context: Record<string, unknown>; next: () => void } | null
   >(null);
@@ -102,17 +103,34 @@ function PracticePageInner() {
     setPendingScenario(scenario);
   };
 
-  const handleStartSession = (config: SessionConfig) => {
-    // AI entitlement is decided once, at session start. Sessions started while
-    // over the limit are free practice runs: no session consumed, AI coach and
-    // AI grading disabled for the whole session.
-    const aiEnabled = !tier.isLocked;
+  const handleStartSession = async (config: SessionConfig) => {
+    // AI entitlement is decided once, at session start, and only the server can
+    // decide it. tier.isLocked is derived from a snapshot that can be hours
+    // old: a user who left the tab open past their last session would be waved
+    // in with the coach shown as available while every call it made was
+    // refused. So the spend is attempted first and its answer is what counts.
+    setStartError(null);
+    let aiEnabled = false;
+
+    if (!tier.isLocked) {
+      const outcome = await tier.consumeSession();
+      if (outcome === 'error') {
+        // Whether the session was spent is unknown, so neither starting with
+        // the coach nor silently dropping to practice is honest. Stop and let
+        // them retry against a re-synced balance.
+        setStartError('Could not start the session. Check your connection and try again.');
+        return;
+      }
+      // 'denied' means the balance was already gone. The session still starts,
+      // as a practice run, which is what the server permits.
+      aiEnabled = outcome === 'granted';
+    }
+
     track('session_started', {
       scenario: pendingScenario?.id ?? 'unknown',
       aiEnabled,
       practiceMode: config.practiceMode,
     });
-    if (aiEnabled) tier.consumeSession();
 
     // Record the start server-side. Unlike consumeSession this fires for every
     // start including practice runs, so a scenario opened and then abandoned
@@ -330,7 +348,8 @@ function PracticePageInner() {
           trialAvailable={tier.trialAvailable}
           sessionsLeft={Math.max(0, tier.sessionLimit - tier.sessionsUsed)}
           credits={tier.credits}
-          onCancel={() => setPendingScenario(null)}
+          startError={startError}
+          onCancel={() => { setPendingScenario(null); setStartError(null); }}
           onStart={handleStartSession}
         />
       )}

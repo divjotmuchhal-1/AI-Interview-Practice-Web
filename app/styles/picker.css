@@ -1273,3 +1273,19 @@
   color: var(--text-muted);
   max-width: 68ch;
 }
+
+/* Shown when a session could not be started, for example the server refused the
+   spend or the request failed. Sits above the footer so it is read before the
+   button is pressed again. */
+.scm-start-error {
+  margin: 0 0 12px;
+  padding: 9px 12px;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--red);
+  background: var(--red-dim);
+  border: 1px solid rgba(217, 83, 79, 0.28);
+  border-radius: var(--radius-sm);
+}
+.scm-start:disabled,
+.scm-cancel:disabled { opacity: 0.55; cursor: not-allowed; }

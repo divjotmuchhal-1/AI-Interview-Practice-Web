@@ -29,14 +29,25 @@ function OptionGroup({ title, children }) {
 
 export default function SessionConfigModal({
   scenario, aiLocked = false, sessionsLeft = null, isFree = false,
-  trialAvailable = false, credits = 0, onCancel, onStart,
+  trialAvailable = false, credits = 0, onCancel, onStart, startError = null,
 }) {
   const [practiceMode,    setPracticeMode]    = useState(false);
   const [hardMode,        setHardMode]        = useState(false);
   const [answerKeyHidden, setAnswerKeyHidden] = useState(false);
 
-  const handleStart = () => {
-    onStart({ practiceMode, hardMode, answerKeyAllowed: !answerKeyHidden });
+  // Starting now waits on the server to confirm the session was actually
+  // spent, so the button has to show that it is working and must not be
+  // clickable twice.
+  const [starting, setStarting] = useState(false);
+
+  const handleStart = async () => {
+    if (starting) return;
+    setStarting(true);
+    try {
+      await onStart({ practiceMode, hardMode, answerKeyAllowed: !answerKeyHidden });
+    } finally {
+      setStarting(false);
+    }
   };
 
   return (
@@ -149,10 +160,19 @@ export default function SessionConfigModal({
           Sessions need a desktop-sized screen: the code editor and panels do not fit on a phone.
           Come back from your computer to start this scenario.
         </div>
+        {startError && <div className="scm-start-error" role="alert">{startError}</div>}
         <div className="scm-footer">
-          <button className="scm-cancel" onClick={onCancel} type="button">Cancel</button>
-          <button className="scm-start" onClick={handleStart} type="button" autoFocus>
-            Start Session →
+          <button className="scm-cancel" onClick={onCancel} type="button" disabled={starting}>
+            Cancel
+          </button>
+          <button
+            className="scm-start"
+            onClick={handleStart}
+            type="button"
+            disabled={starting}
+            autoFocus
+          >
+            {starting ? 'Starting…' : <>Start Session →</>}
           </button>
         </div>
       </div>

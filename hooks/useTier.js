@@ -43,19 +43,58 @@ export function useTier() {
     return Math.ceil((next - now) / (1000 * 60 * 60 * 24));
   })();
 
-  const consumeSession = useCallback(() => {
-    // Optimistic update mirroring supabase/credits.sql: spend the free monthly
-    // allowance first, and only then a purchased credit.
-    setSub(prev => {
-      const limit = prev.session_limit ?? FREE_SESSION_LIMIT;
-      const used  = prev.sessions_used_this_month ?? 0;
-      return used < limit
-        ? { ...prev, sessions_used_this_month: used + 1 }
-        : { ...prev, credits_remaining: Math.max(0, (prev.credits_remaining ?? 0) - 1) };
-    });
-    fetch('/api/subscription/consume', { method: 'POST' })
-      .then(r => { if (!r.ok) fetchSub(); }) // rejected: re-sync with server truth
-      .catch(() => {});
+  /**
+   * Spend one session. Resolves to 'granted', 'denied' or 'error'.
+   *
+   * The caller must wait for this before deciding whether a session gets the AI
+   * coach. This used to update optimistically and return nothing, so a client
+   * holding stale state would wave the user into a session with the coach
+   * shown as available while the server refused every call it made. Only the
+   * database knows the real balance, because consume_session checks and spends
+   * atomically under a row lock.
+   */
+  const consumeSession = useCallback(async () => {
+    try {
+      const res  = await fetch('/api/subscription/consume', { method: 'POST' });
+      const data = await res.json().catch(() => null);
+
+      if (res.ok && data?.ok) {
+        // Reconcile from the server rather than guessing which bucket was
+        // spent. The free allowance goes first, then credits, and the response
+        // carries the balance that actually resulted.
+        setSub(prev => {
+          const limit = prev.session_limit ?? FREE_SESSION_LIMIT;
+          const used  = prev.sessions_used_this_month ?? 0;
+          return {
+            ...prev,
+            sessions_used_this_month: used < limit ? used + 1 : used,
+            credits_remaining:        data.credits_remaining ?? prev.credits_remaining,
+          };
+        });
+        return 'granted';
+      }
+
+      if (res.status === 403) {
+        // Out of sessions. The response carries server truth, so adopt it
+        // instead of refetching and racing the screen transition.
+        setSub(prev => ({
+          ...prev,
+          sessions_used_this_month: data?.sessions_used_this_month ?? prev.sessions_used_this_month,
+          session_limit:            data?.session_limit ?? prev.session_limit,
+          credits_remaining:        data?.credits_remaining ?? 0,
+          trial_available:          false,
+        }));
+        return 'denied';
+      }
+
+      fetchSub();
+      return 'error';
+    } catch {
+      // Network failure. Whether the row was touched is unknowable from here,
+      // so resync and let the caller decide rather than assuming either way.
+      fetchSub();
+      return 'error';
+    }
   }, [fetchSub]);
 
   // Both flows redirect to a Stripe-hosted page. Parsing is guarded because an
