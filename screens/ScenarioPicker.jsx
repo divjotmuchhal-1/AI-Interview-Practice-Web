@@ -12,6 +12,10 @@ function UserIcon() {
 import { TRACKS, SCENARIOS } from '@/data/scenarios';
 import { FREE_SESSION_LIMIT, PACK_SESSIONS, PACK_PRICE_USD } from '@/lib/sessionLimits';
 
+// Tracks beyond this are gated. The gate checks credits as well as tier,
+// because a pack buyer keeps status 'free' forever: status only ever holds
+// 'pro' for the legacy monthly plan. Checking tier alone locked the four tracks
+// the pack is explicitly sold on (see PACK_EXTRA in SubscriptionScreen).
 const FREE_TRACK_LIMIT = 3;
 
 const DIFFICULTY_COLORS = {
@@ -728,7 +732,7 @@ export default function ScenarioPicker({
               track={track}
               onSelect={onSelect}
               isLocked={isLocked}
-              tierLocked={tier === 'free' && i >= FREE_TRACK_LIMIT}
+              tierLocked={tier === 'free' && credits <= 0 && i >= FREE_TRACK_LIMIT}
               isOpen={openTracks.includes(track.id)}
               onToggle={() => toggleTrack(track.id)}
               completedIds={completedIds}
