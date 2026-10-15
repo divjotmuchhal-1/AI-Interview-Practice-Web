@@ -2469,3 +2469,48 @@
 @media (prefers-reduced-motion: reduce) {
   .tum-modal, .tum-overlay { animation: none; }
 }
+
+/* ── Finishing a scenario ─────────────────────────────────────────────────── */
+/* The completion state used to be a congratulation with nothing to click.
+   These two give it the action it was missing: a primary button where the
+   "Next Part" button sits on every other part, and a top-bar control that
+   stops saying "End Session" once ending is the only way to get the score. */
+.test-next-part-btn--score {
+  background: var(--green);
+  border-color: var(--green);
+  color: #0b1a12;
+  font-weight: 600;
+  animation: scorePulse 1.6s ease-in-out 3;
+}
+.test-next-part-btn--score:hover {
+  background: #6fc98f;
+  border-color: #6fc98f;
+}
+@keyframes scorePulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(92, 184, 126, 0); }
+  50%      { box-shadow: 0 0 0 5px rgba(92, 184, 126, 0.18); }
+}
+
+.topbar-end-btn--ready {
+  background: var(--green);
+  border-color: var(--green);
+  color: #0b1a12;
+  font-weight: 600;
+}
+.topbar-end-btn--ready:hover { background: #6fc98f; border-color: #6fc98f; }
+
+@media (prefers-reduced-motion: reduce) {
+  .test-next-part-btn--score { animation: none; }
+}
+
+/* Runtime download notice. Sits beside the run button so the wait is attached
+   to the control it blocks. */
+.test-runtime-loading {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-right: 10px;
+  font-size: 11.5px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}

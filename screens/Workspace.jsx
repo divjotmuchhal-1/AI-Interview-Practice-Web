@@ -59,9 +59,23 @@ export default function Workspace({ scenario, onBack, onEndSession, isAiLocked, 
 
   const isCodeReview = scenario.type === 'code-review';
 
-  // Pre-warm the test runtime so the first "Run Tests" click is instant
+  // Pre-warm the test runtime so the first "Run Tests" click is instant.
+  //
+  // Also the only measurement of how long that takes. 28 abandoned sessions
+  // recorded no events at all, and nothing in the data distinguishes a slow
+  // WebAssembly download from a viewport too small for the workspace from
+  // someone who simply looked and left. Recording the runtime timing and the
+  // viewport makes the next 28 answerable.
+  const [runtimeReady, setRuntimeReady] = useState(false);
   useEffect(() => {
-    if (!isCodeReview) warmupRunner(scenario);
+    if (isCodeReview) { setRuntimeReady(true); return; }
+    let live = true;
+    warmupRunner(scenario).then((r) => {
+      if (!live) return;
+      setRuntimeReady(true);
+      logEventRef.current?.('runtime_ready', { language: r.language, ms: r.ms, ok: r.ok });
+    });
+    return () => { live = false; };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Session events ───────────────────────────────────────────────────────────
@@ -69,12 +83,31 @@ export default function Workspace({ scenario, onBack, onEndSession, isAiLocked, 
   const [events, setEvents] = useState([]);
   const editDebounce = useRef(null);
 
+  // Lets the warmup effect above log without depending on a binding declared
+  // after it.
+  const logEventRef = useRef(null);
+
   const logEvent = useCallback((type, data) => {
     setEvents((prev) => [
       ...prev,
       { type, t: Date.now() - sessionStart.current, data },
     ]);
   }, []);
+  logEventRef.current = logEvent;
+
+  // First event of every session, so a session that produced nothing else still
+  // says something. The viewport is here because the workspace hides itself
+  // below a breakpoint: a phone-sized visit sees only the "needs a bigger
+  // screen" gate, which looks identical in the data to a slow load or a user
+  // who glanced and left.
+  useEffect(() => {
+    logEvent('workspace_opened', {
+      viewportWidth:  typeof window !== 'undefined' ? window.innerWidth  : null,
+      viewportHeight: typeof window !== 'undefined' ? window.innerHeight : null,
+      language:       scenario.testRunner?.language ?? 'javascript',
+      parts:          scenario.parts.length,
+    });
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Progress heartbeat ───────────────────────────────────────────────────────
   // A session that is abandoned never reaches the grader, so without this the
@@ -245,6 +278,17 @@ export default function Workspace({ scenario, onBack, onEndSession, isAiLocked, 
 
   const isLastPart = partIndex === scenario.parts.length - 1;
 
+  // Every visible and hidden test green on the final part: the scenario is
+  // solved and the only thing left is to collect the score.
+  const readyToFinish = Boolean(
+    isLastPart &&
+    testResults &&
+    !testResults.moduleError &&
+    [...(testResults.visible ?? []), ...(testResults.hidden ?? [])].length > 0 &&
+    [...(testResults.visible ?? []), ...(testResults.hidden ?? [])].every((t) => t.passed),
+  );
+
+
   return (
     <div className="workspace-root">
       {/* Shown via CSS only below the mobile breakpoint */}
@@ -267,6 +311,7 @@ export default function Workspace({ scenario, onBack, onEndSession, isAiLocked, 
         secondsLeft={secondsLeft}
         practiceMode={practiceMode}
         onEndSession={() => onEndSession(events)}
+        readyToFinish={readyToFinish}
         hardMode={hardMode}
         onReportIssue={() => setShowReport(true)}
       />
@@ -360,6 +405,7 @@ export default function Workspace({ scenario, onBack, onEndSession, isAiLocked, 
                     onNextPart={handleNextPart}
                     onRunTests={handleRunTests}
                     isRunning={isRunning}
+                    onEndSession={() => onEndSession(events)}
                   />
                 </Panel>
               </>

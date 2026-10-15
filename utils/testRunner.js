@@ -342,10 +342,31 @@ export async function runTests(files, scenario, partIndex) {
 }
 
 // Pre-warm the runtime in the background so the first "Run Tests" click is instant.
+/**
+ * Start downloading the test runtime before the user asks for it.
+ *
+ * Returns a promise that resolves once the runtime is usable, so the caller can
+ * time it. Pyodide is a multi-megabyte WebAssembly build of CPython and sql.js
+ * ships SQLite the same way; on a slow connection that is a long silence the
+ * user has no way to interpret, and a silence is indistinguishable from a
+ * broken page.
+ *
+ * Resolves with { language, ms, ok } and never rejects: a warmup failure must
+ * not break the session, since the real run reports its own errors.
+ */
 export function warmupRunner(scenario) {
-  const lang = scenario.testRunner.language ?? 'javascript';
-  if (lang === 'python') getPyodide().catch(() => {});
-  if (lang === 'sql')    getSQL().catch(() => {});
+  const lang  = scenario.testRunner.language ?? 'javascript';
+  const start = Date.now();
+
+  if (lang !== 'python' && lang !== 'sql') {
+    return Promise.resolve({ language: lang, ms: 0, ok: true });
+  }
+
+  const loading = lang === 'python' ? getPyodide() : getSQL();
+  return loading.then(
+    () => ({ language: lang, ms: Date.now() - start, ok: true }),
+    () => ({ language: lang, ms: Date.now() - start, ok: false }),
+  );
 }
 
 // ── Display helpers (used by TestPanel) ───────────────────────────────────────

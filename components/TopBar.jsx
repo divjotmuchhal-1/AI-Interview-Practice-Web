@@ -10,7 +10,7 @@ function formatTime(seconds) {
 export default function TopBar({
   scenario, part, partIndex, onBack, onPrevPart, onNextPart,
   secondsLeft, practiceMode,
-  onEndSession, hardMode, onReportIssue,
+  onEndSession, hardMode, onReportIssue, readyToFinish = false,
 }) {
   const totalParts = scenario.parts.length;
   const isFirst    = partIndex === 0;
@@ -43,7 +43,16 @@ export default function TopBar({
         >
           Report issue
         </button>
-        <button className="topbar-end-btn" onClick={onEndSession}>End Session</button>
+        {/* The label is the action, and the action changes. Mid-session this
+            control ends a run you have not finished; once the last part is
+            green it is the only way to see your score, and "End Session" made
+            that read like throwing the work away. */}
+        <button
+          className={`topbar-end-btn${readyToFinish ? ' topbar-end-btn--ready' : ''}`}
+          onClick={onEndSession}
+        >
+          {readyToFinish ? 'Get your score →' : 'End Session'}
+        </button>
         {hardMode && (
           <span className="topbar-mode-badge topbar-mode-badge--hard">🔥 Hard</span>
         )}

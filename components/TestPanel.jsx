@@ -5,7 +5,7 @@ import { formatCall, formatValue } from '@/utils/testRunner';
 
 const IS_MAC = typeof navigator !== 'undefined' && /Mac/.test(navigator.platform);
 
-export default function TestPanel({ results, scenario, isLastPart, onNextPart, onRunTests, isRunning }) {
+export default function TestPanel({ results, scenario, isLastPart, onNextPart, onRunTests, isRunning, onEndSession, runtimeReady = true }) {
   const { moduleError, visible = [], hidden = [], consoleOutput } = results ?? { moduleError: null, visible: [], hidden: [], consoleOutput: null };
   const { functionName = '', inputKeys = [], language } = scenario.testRunner;
 
@@ -23,6 +23,14 @@ export default function TestPanel({ results, scenario, isLastPart, onNextPart, o
         {results && !moduleError && (
           <span className={`test-panel-score ${allPass ? 'score--pass score--allpass' : 'score--fail'}`}>
             {totalPass} / {totalCount} passing
+          </span>
+        )}
+        {/* Python and SQL scenarios download a WebAssembly runtime before the
+            first run. Saying so turns an unexplained delay into a wait. */}
+        {!runtimeReady && (
+          <span className="test-runtime-loading">
+            <span className="btn-run-spinner" aria-hidden="true" />
+            Loading {scenario.testRunner?.language === 'sql' ? 'SQLite' : 'Python'} runtime…
           </span>
         )}
         <button className={`btn-run-tests ${isRunning ? 'btn-run-tests--running' : ''}`} onClick={onRunTests} disabled={isRunning}>
@@ -96,9 +104,18 @@ export default function TestPanel({ results, scenario, isLastPart, onNextPart, o
             <button className="test-next-part-btn" onClick={onNextPart}>Next Part →</button>
           </div>
         )}
+        {/* Completing the last part used to render this banner with nothing to
+            click, while every other state offered a button. 18 sessions reached
+            all-green on the final part and left without ever requesting a
+            score, because the only way forward was a control in the top bar
+            labelled "End Session", which reads as quitting rather than
+            finishing. */}
         {allPass && isLastPart && (
           <div className="test-next-part test-next-part--complete">
-            <span className="test-next-part-label"><span className="test-next-part-check">✓</span> Scenario complete 🎉</span>
+            <span className="test-next-part-label"><span className="test-next-part-check">✓</span> Scenario complete</span>
+            <button className="test-next-part-btn test-next-part-btn--score" onClick={onEndSession}>
+              Get your score →
+            </button>
           </div>
         )}
       </div>
